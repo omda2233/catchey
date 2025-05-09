@@ -1,0 +1,40 @@
+name: catchy
+version: 1.0.0+1
+description: A bilingual marketplace for fabrics and accessories.
+
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.0.5
+  firebase_core: ^2.15.1
+  firebase_auth: ^4.7.2
+  cloud_firestore: ^4.8.4
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.18.0
+  cupertino_icons: ^1.0.6
+  modal_progress_hud_nsn: ^0.3.0
+  google_fonts: ^6.1.0
+  shared_preferences: ^2.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/catchy_logo.png
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo/Cairo-Regular.ttf
+        - asset: assets/fonts/Cairo/Cairo-Bold.ttf
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto/Roboto-Bold.ttf 

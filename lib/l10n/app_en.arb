@@ -1,0 +1,11 @@
+{
+  "@@locale": "en",
+  "appName": "Catchey",
+  "@appName": {
+    "description": "The name of the application"
+  },
+  "welcome": "Welcome to Catchey",
+  "@welcome": {
+    "description": "Welcome message shown on the splash screen"
+  }
+} 

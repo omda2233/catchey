@@ -2,90 +2,136 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFF1A237E); // Navy
-  static const Color accentColor = Color(0xFFFFD700); // Gold
-  static const Color backgroundColor = Color(0xFFF5F5F5);
-  static const Color darkBackgroundColor = Color(0xFF121212);
-  static const Color textColor = Color(0xFF212121);
-  static const Color darkTextColor = Color(0xFFFFFFFF);
-
-  static ThemeData lightTheme = ThemeData(
-    primaryColor: primaryColor,
-    colorScheme: ColorScheme.light(
-      primary: primaryColor,
-      secondary: accentColor,
-      background: backgroundColor,
+  static final ThemeData lightTheme = ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.light,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.blue,
+      brightness: Brightness.light,
     ),
-    scaffoldBackgroundColor: backgroundColor,
-    textTheme: GoogleFonts.cairoTextTheme(
-      ThemeData.light().textTheme,
-    ),
+    textTheme: GoogleFonts.cairoTextTheme(ThemeData.light().textTheme),
     appBarTheme: AppBarTheme(
-      backgroundColor: primaryColor,
-      elevation: 0,
       centerTitle: true,
+      elevation: 0,
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
       titleTextStyle: GoogleFonts.cairo(
-        color: Colors.white,
         fontSize: 20,
         fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
+    ),
+    cardTheme: CardTheme(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       ),
     ),
-    cardTheme: CardTheme(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       ),
-      margin: const EdgeInsets.all(8),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.blue, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.red),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.red, width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
   );
 
-  static ThemeData darkTheme = ThemeData(
-    primaryColor: primaryColor,
-    colorScheme: ColorScheme.dark(
-      primary: primaryColor,
-      secondary: accentColor,
-      background: darkBackgroundColor,
+  static final ThemeData darkTheme = ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.blue,
+      brightness: Brightness.dark,
     ),
-    scaffoldBackgroundColor: darkBackgroundColor,
-    textTheme: GoogleFonts.cairoTextTheme(
-      ThemeData.dark().textTheme,
-    ),
+    textTheme: GoogleFonts.cairoTextTheme(ThemeData.dark().textTheme),
     appBarTheme: AppBarTheme(
-      backgroundColor: darkBackgroundColor,
-      elevation: 0,
       centerTitle: true,
+      elevation: 0,
+      backgroundColor: Colors.grey.shade900,
       titleTextStyle: GoogleFonts.cairo(
-        color: darkTextColor,
         fontSize: 20,
         fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+    ),
+    cardTheme: CardTheme(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       ),
     ),
-    cardTheme: CardTheme(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       ),
-      margin: const EdgeInsets.all(8),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade700),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.blue, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.red),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.red, width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.grey.shade900,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
   );
 } 

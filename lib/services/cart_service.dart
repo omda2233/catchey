@@ -2,10 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/cart_model.dart';
 import '../models/order_model.dart';
 import 'order_service.dart';
+import '../models/product.dart';
+import 'product_service.dart';
 
 class CartService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final OrderService _orderService = OrderService();
+  final ProductService _productService = ProductService();
   final String _collection = 'carts';
 
   // Get user's cart
@@ -33,10 +36,10 @@ class CartService {
   }
 
   // Add item to cart
-  Future<void> addToCart(String userId, CartItem item) async {
+  Future<void> addToCart(String userId, Product product, {int quantity = 1}) async {
     try {
       final cart = await getCart(userId);
-      final updatedCart = cart.addItem(item);
+      final updatedCart = cart.addItem(product, quantity: quantity);
       await _firestore.collection(_collection).doc(userId).update(
         updatedCart.toFirestore(),
       );
@@ -177,5 +180,34 @@ class CartService {
         .doc(userId)
         .snapshots()
         .map((doc) => CartModel.fromFirestore(doc));
+  }
+
+  Future<void> updateCart(Cart cart) async {
+    await _firestore
+        .collection(_collection)
+        .doc(cart.userId)
+        .set(cart.toFirestore());
+  }
+
+  Future<void> updateQuantity(
+      String userId, String productId, int quantity) async {
+    final cart = await getCart(userId);
+    final updatedCart = cart.updateQuantity(productId, quantity);
+    await updateCart(updatedCart);
+  }
+
+  Future<void> mergeAnonymousCart(String anonymousUserId, String userId) async {
+    final anonymousCart = await getCart(anonymousUserId);
+    final userCart = await getCart(userId);
+
+    // Merge items from anonymous cart into user cart
+    Cart mergedCart = userCart;
+    for (final item in anonymousCart.items) {
+      mergedCart = mergedCart.addItem(item.product, quantity: item.quantity);
+    }
+
+    // Update user's cart and delete anonymous cart
+    await updateCart(mergedCart);
+    await _firestore.collection(_collection).doc(anonymousUserId).delete();
   }
 } 

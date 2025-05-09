@@ -6,189 +6,105 @@ class OrderService {
   final String _collection = 'orders';
 
   // Create a new order
-  Future<OrderModel> createOrder(OrderModel order) async {
-    try {
-      // Validate order data
-      if (order.items.isEmpty) {
-        throw 'Order must contain at least one item';
-      }
-
-      // Calculate totals
-      final subtotal = order.items.fold(
-        0.0,
-        (sum, item) => sum + (item.price * item.quantity),
-      );
-      final tax = subtotal * 0.15; // 15% tax
-      final shipping = order.deliveryMethod == DeliveryMethod.delivery ? 10.0 : 0.0;
-      final total = subtotal + tax + shipping;
-
-      // Create order with calculated totals
-      final orderWithTotals = order.copyWith(
-        subtotal: subtotal,
-        tax: tax,
-        shipping: shipping,
-        total: total,
-        status: OrderStatus.pending,
-        createdAt: DateTime.now(),
-      );
-
-      // Add to Firestore
-      final docRef = await _firestore.collection(_collection).add(
-        orderWithTotals.toFirestore(),
-      );
-
-      return orderWithTotals.copyWith(id: docRef.id);
-    } catch (e) {
-      print('Error creating order: $e');
-      rethrow;
-    }
+  Future<String> createOrder(OrderModel order) async {
+    final docRef = await _firestore.collection(_collection).add(order.toMap());
+    return docRef.id;
   }
 
-  // Update order status
-  Future<void> updateOrderStatus(
-    String orderId,
-    OrderStatus status,
-  ) async {
-    try {
-      final updates = {
-        'status': status.toString(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-
-      // Add timestamp based on status
-      switch (status) {
-        case OrderStatus.accepted:
-          updates['acceptedAt'] = FieldValue.serverTimestamp();
-          break;
-        case OrderStatus.ready:
-          updates['readyAt'] = FieldValue.serverTimestamp();
-          break;
-        case OrderStatus.inTransit:
-          updates['inTransitAt'] = FieldValue.serverTimestamp();
-          break;
-        case OrderStatus.delivered:
-          updates['deliveredAt'] = FieldValue.serverTimestamp();
-          break;
-        case OrderStatus.completed:
-          updates['completedAt'] = FieldValue.serverTimestamp();
-          break;
-        default:
-          break;
-      }
-
-      await _firestore.collection(_collection).doc(orderId).update(updates);
-    } catch (e) {
-      print('Error updating order status: $e');
-      rethrow;
-    }
+  // Get a single order by ID
+  Future<OrderModel?> getOrder(String orderId) async {
+    final doc = await _firestore.collection(_collection).doc(orderId).get();
+    if (!doc.exists) return null;
+    return OrderModel.fromMap(doc.id, doc.data()!);
   }
 
-  // Assign delivery company to order
-  Future<void> assignDeliveryCompany(
-    String orderId,
-    String deliveryCompanyId,
-    String deliveryCompanyName,
-  ) async {
-    try {
-      await _firestore.collection(_collection).doc(orderId).update({
-        'deliveryCompanyId': deliveryCompanyId,
-        'deliveryCompanyName': deliveryCompanyName,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      print('Error assigning delivery company: $e');
-      rethrow;
-    }
-  }
-
-  // Get order by ID
-  Future<OrderModel> getOrderById(String orderId) async {
-    try {
-      final doc = await _firestore.collection(_collection).doc(orderId).get();
-      if (!doc.exists) {
-        throw 'Order not found';
-      }
-      return OrderModel.fromFirestore(doc);
-    } catch (e) {
-      print('Error getting order: $e');
-      rethrow;
-    }
-  }
-
-  // Get orders by customer
-  Stream<List<OrderModel>> getOrdersByCustomer(String customerId) {
-    return _firestore
-        .collection(_collection)
-        .where('customerId', isEqualTo: customerId)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => OrderModel.fromFirestore(doc))
-            .toList());
-  }
-
-  // Get orders by seller
-  Stream<List<OrderModel>> getOrdersBySeller(String sellerId) {
+  // Stream orders for a seller
+  Stream<List<OrderModel>> streamSellerOrders(String sellerId) {
     return _firestore
         .collection(_collection)
         .where('sellerId', isEqualTo: sellerId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => OrderModel.fromFirestore(doc))
-            .toList());
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => OrderModel.fromMap(doc.id, doc.data()))
+          .toList();
+    });
   }
 
-  // Get orders by delivery company
-  Stream<List<OrderModel>> getOrdersByDeliveryCompany(String deliveryCompanyId) {
+  // Stream orders for a customer
+  Stream<List<OrderModel>> streamCustomerOrders(String customerId) {
     return _firestore
         .collection(_collection)
-        .where('deliveryCompanyId', isEqualTo: deliveryCompanyId)
+        .where('customerId', isEqualTo: customerId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => OrderModel.fromFirestore(doc))
-            .toList());
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => OrderModel.fromMap(doc.id, doc.data()))
+          .toList();
+    });
+  }
+
+  // Update order status
+  Future<void> updateOrderStatus(String orderId, OrderStatus status) async {
+    await _firestore.collection(_collection).doc(orderId).update({
+      'status': status.toString().split('.').last,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Delete an order
+  Future<void> deleteOrder(String orderId) async {
+    await _firestore.collection(_collection).doc(orderId).delete();
   }
 
   // Get orders by status
-  Stream<List<OrderModel>> getOrdersByStatus(OrderStatus status) {
+  Stream<List<OrderModel>> getOrdersByStatus(
+    String sellerId,
+    OrderStatus status,
+  ) {
     return _firestore
         .collection(_collection)
-        .where('status', isEqualTo: status.toString())
+        .where('sellerId', isEqualTo: sellerId)
+        .where('status', isEqualTo: status.toString().split('.').last)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => OrderModel.fromFirestore(doc))
-            .toList());
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => OrderModel.fromMap(doc.id, doc.data()))
+          .toList();
+    });
   }
 
-  // Update deposit payment status
-  Future<void> updateDepositPaymentStatus(
-    String orderId,
-    bool isDepositPaid,
+  // Get orders count by status
+  Future<int> getOrdersCountByStatus(
+    String sellerId,
+    OrderStatus status,
   ) async {
-    try {
-      await _firestore.collection(_collection).doc(orderId).update({
-        'isDepositPaid': isDepositPaid,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      print('Error updating deposit payment status: $e');
-      rethrow;
-    }
+    final snapshot = await _firestore
+        .collection(_collection)
+        .where('sellerId', isEqualTo: sellerId)
+        .where('status', isEqualTo: status.toString().split('.').last)
+        .count()
+        .get();
+    return snapshot.count ?? 0;
   }
 
-  // Cancel order
-  Future<void> cancelOrder(String orderId) async {
-    try {
-      await _firestore.collection(_collection).doc(orderId).update({
-        'status': OrderStatus.cancelled.toString(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      print('Error cancelling order: $e');
-      rethrow;
-    }
+  // Get total sales for a seller
+  Future<double> getTotalSales(String sellerId) async {
+    final snapshot = await _firestore
+        .collection(_collection)
+        .where('sellerId', isEqualTo: sellerId)
+        .where('status', whereIn: [
+          OrderStatus.delivered.toString().split('.').last,
+          OrderStatus.shipped.toString().split('.').last,
+        ])
+        .get();
+
+    return snapshot.docs.fold<double>(
+      0,
+      (sum, doc) => sum + (doc.data()['total'] as num).toDouble(),
+    );
   }
 } 

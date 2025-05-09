@@ -1,0 +1,11 @@
+{
+  "@@locale": "ar",
+  "appName": "كاتشي",
+  "@appName": {
+    "description": "The name of the application"
+  },
+  "welcome": "مرحباً بك في كاتشي",
+  "@welcome": {
+    "description": "Welcome message shown on the splash screen"
+  }
+} 

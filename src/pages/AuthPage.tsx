@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
@@ -23,7 +22,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, User, Store, Truck, ShieldCheck } from 'lucide-react';
 
 export default function AuthPage() {
   const { user, signIn, signUp, isLoading } = useAuth();
@@ -159,10 +158,33 @@ export default function AuthPage() {
                     </Button>
                     
                     <div className="text-center">
-                      <p className={`text-xs text-gold/50 ${language === 'ar' ? 'font-cairo' : ''}`}>
-                        {language === 'en' ? 'Demo accounts:' : 'حسابات تجريبية:'}
+                      <p className={`text-sm font-medium text-gold/70 mb-2 ${language === 'ar' ? 'font-cairo' : ''}`}>
+                        {language === 'en' ? 'Test Accounts:' : 'حسابات تجريبية:'}
                       </p>
-                      <p className="text-xs text-gold/50">user@example.com / password</p>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="flex items-center space-x-1 bg-navy-dark p-1.5 rounded border border-gold/10">
+                          <ShieldCheck className="h-3.5 w-3.5 text-gold/60" />
+                          <span className="text-gold/80">admin@test.com</span>
+                        </div>
+                        <div className="flex items-center space-x-1 bg-navy-dark p-1.5 rounded border border-gold/10">
+                          <Store className="h-3.5 w-3.5 text-gold/60" />
+                          <span className="text-gold/80">seller@test.com</span>
+                        </div>
+                        <div className="flex items-center space-x-1 bg-navy-dark p-1.5 rounded border border-gold/10">
+                          <User className="h-3.5 w-3.5 text-gold/60" />
+                          <span className="text-gold/80">buyer@test.com</span>
+                        </div>
+                        <div className="flex items-center space-x-1 bg-navy-dark p-1.5 rounded border border-gold/10">
+                          <Truck className="h-3.5 w-3.5 text-gold/60" />
+                          <span className="text-gold/80">transport@test.com</span>
+                        </div>
+                      </div>
+                      
+                      <p className="mt-2 text-xs text-gold/60">
+                        {language === 'en' ? 'Password for all test accounts:' : 'كلمة المرور لجميع الحسابات التجريبية:'} 
+                        <span className="font-mono bg-navy-dark px-1.5 py-0.5 rounded ml-1">test123</span>
+                      </p>
                     </div>
                   </form>
                 </TabsContent>

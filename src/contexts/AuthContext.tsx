@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -26,31 +25,64 @@ interface AuthContextType {
 // Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo
+// Test users for different roles
 const MOCK_USERS: User[] = [
+  // Admin User
   {
     id: '1',
+    name: 'Admin User',
+    email: 'admin@test.com',
+    role: 'admin',
+    avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=1A1F2C&color=E6B54A',
+  },
+  // Seller User
+  {
+    id: '2',
+    name: 'Seller User',
+    email: 'seller@test.com',
+    role: 'seller',
+    avatar: 'https://ui-avatars.com/api/?name=Seller+User&background=1A1F2C&color=E6B54A',
+  },
+  // Buyer User (Regular User)
+  {
+    id: '3',
+    name: 'Buyer User',
+    email: 'buyer@test.com',
+    role: 'user',
+    avatar: 'https://ui-avatars.com/api/?name=Buyer+User&background=1A1F2C&color=E6B54A',
+  },
+  // Shipping User
+  {
+    id: '4',
+    name: 'Transport User',
+    email: 'transport@test.com',
+    role: 'shipping',
+    avatar: 'https://ui-avatars.com/api/?name=Transport+User&background=1A1F2C&color=E6B54A',
+  },
+  // Keep existing users for backward compatibility
+  {
+    id: '5',
     name: 'John User',
     email: 'user@example.com',
     role: 'user',
     avatar: 'https://ui-avatars.com/api/?name=John+User&background=1A1F2C&color=E6B54A',
   },
   {
-    id: '2',
+    id: '6',
     name: 'Sarah Seller',
     email: 'seller@example.com',
     role: 'seller',
     avatar: 'https://ui-avatars.com/api/?name=Sarah+Seller&background=1A1F2C&color=E6B54A',
   },
   {
-    id: '3',
+    id: '7',
     name: 'Mike Shipper',
     email: 'shipping@example.com',
     role: 'shipping',
     avatar: 'https://ui-avatars.com/api/?name=Mike+Shipper&background=1A1F2C&color=E6B54A',
   },
   {
-    id: '4',
+    id: '8',
     name: 'Amanda Admin',
     email: 'admin@example.com',
     role: 'admin',
@@ -72,7 +104,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       const foundUser = MOCK_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
       
-      if (foundUser && password === 'password') {
+      // Use "test123" as the password for all test users
+      if (foundUser && (password === 'test123' || password === 'password')) {
         setUser(foundUser);
         toast({
           title: "Signed in successfully",

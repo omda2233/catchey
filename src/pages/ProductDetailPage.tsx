@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { ProductCarousel } from '@/components/ProductCarousel';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 import { MOCK_PRODUCTS, Product } from '@/models/Product';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,14 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, ChevronLeft, ChevronRight, ShoppingCart, Store, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductCard } from '@/components/ProductCard';
-import { useToast } from '@/components/ui/use-toast';
 
 export default function ProductDetailPage() {
   const { productId } = useParams();
   const { t, language } = useLanguage();
   const { user } = useAuth();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
-  const { toast } = useToast();
   
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,17 +48,9 @@ export default function ProductDetailPage() {
   }, [productId]);
   
   const handleAddToCart = () => {
-    if (!user) {
-      navigate('/auth/signin');
-      return;
-    }
+    if (!product) return;
     
-    toast({
-      title: language === 'en' ? 'Added to cart' : 'تمت الإضافة إلى السلة',
-      description: language === 'en' 
-        ? `${product?.name} x${quantity} added to your cart` 
-        : `تمت إضافة ${product?.nameAr || product?.name} x${quantity} إلى سلة التسوق`,
-    });
+    addToCart(product, quantity);
   };
   
   if (isLoading) {

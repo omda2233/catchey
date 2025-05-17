@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -166,7 +165,7 @@ export default function CheckoutPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem checked={true} id="credit-card" className="border-gold/50 text-gold" />
+                <RadioGroupItem value="credit-card" id="credit-card" className="border-gold/50 text-gold" />
                 <Label 
                   htmlFor="credit-card" 
                   className="flex items-center cursor-pointer text-gold"

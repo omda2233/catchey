@@ -28,57 +28,44 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, UserPlus, Edit, Trash2, Shield, ShieldCheck, Store, User as UserIcon, Truck } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminUsersPage() {
-  const { user } = useAuth();
+  const { user, allUsers, updateUser, deleteUser, addUser } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Mock users list - in a real app, this would come from the backend
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: '1',
-      name: 'Admin User',
-      email: 'admin@test.com',
-      role: 'admin',
-      avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=1A1F2C&color=E6B54A',
-    },
-    {
-      id: '2',
-      name: 'Seller User',
-      email: 'seller@test.com',
-      role: 'seller',
-      avatar: 'https://ui-avatars.com/api/?name=Seller+User&background=1A1F2C&color=E6B54A',
-    },
-    {
-      id: '3',
-      name: 'Buyer User',
-      email: 'buyer@test.com',
-      role: 'user',
-      avatar: 'https://ui-avatars.com/api/?name=Buyer+User&background=1A1F2C&color=E6B54A',
-    },
-    {
-      id: '4',
-      name: 'Transport User',
-      email: 'transport@test.com',
-      role: 'shipping',
-      avatar: 'https://ui-avatars.com/api/?name=Transport+User&background=1A1F2C&color=E6B54A',
-    },
-  ]);
-  
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
     password: '',
     role: 'user' as UserRole,
+    active: true
   });
   
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   // Redirect if not logged in or not admin
   if (!user) {
@@ -111,7 +98,7 @@ export default function AdminUsersPage() {
     );
   }
   
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     // Validate form
     if (!newUser.name || !newUser.email || !newUser.password) {
       toast({
@@ -124,59 +111,59 @@ export default function AdminUsersPage() {
       return;
     }
     
-    // Check if email already exists
-    if (users.some(user => user.email === newUser.email)) {
-      toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
-        description: language === 'en' 
-          ? 'Email already in use' 
-          : 'البريد الإلكتروني قيد الاستخدام بالفعل',
-        variant: 'destructive',
+    try {
+      await addUser(newUser);
+      setIsDialogOpen(false);
+      
+      // Reset form
+      setNewUser({
+        name: '',
+        email: '',
+        password: '',
+        role: 'user',
+        active: true
       });
-      return;
+    } catch (error) {
+      console.error('Failed to add user:', error);
     }
-    
-    // Create new user
-    const newUserObj: User = {
-      id: (users.length + 1).toString(),
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(newUser.name)}&background=1A1F2C&color=E6B54A`,
-    };
-    
-    setUsers([...users, newUserObj]);
-    
-    // Reset form
-    setNewUser({
-      name: '',
-      email: '',
-      password: '',
-      role: 'user',
-    });
-    
-    toast({
-      title: language === 'en' ? 'Success' : 'نجاح',
-      description: language === 'en' 
-        ? 'User added successfully' 
-        : 'تمت إضافة المستخدم بنجاح',
-    });
   };
   
-  const handleUpdateRole = (userId: string, role: UserRole) => {
-    setUsers(users.map(u => 
-      u.id === userId ? { ...u, role } : u
-    ));
+  const handleUpdateRole = async (userId: string, role: UserRole) => {
+    const userToUpdate = allUsers.find(u => u.id === userId);
+    if (!userToUpdate) return;
     
-    toast({
-      title: language === 'en' ? 'Success' : 'نجاح',
-      description: language === 'en' 
-        ? 'User role updated' 
-        : 'تم تحديث دور المستخدم',
-    });
+    try {
+      await updateUser({
+        ...userToUpdate,
+        role
+      });
+    } catch (error) {
+      console.error('Failed to update role:', error);
+    }
   };
   
-  const handleUpdateUser = () => {
+  const handleToggleActive = async (userId: string, active: boolean) => {
+    const userToUpdate = allUsers.find(u => u.id === userId);
+    if (!userToUpdate) return;
+    
+    try {
+      await updateUser({
+        ...userToUpdate,
+        active
+      });
+      
+      toast({
+        title: language === 'en' ? 'Success' : 'نجاح',
+        description: language === 'en' 
+          ? `User ${active ? 'activated' : 'deactivated'} successfully` 
+          : `تم ${active ? 'تفعيل' : 'تعطيل'} المستخدم بنجاح`,
+      });
+    } catch (error) {
+      console.error('Failed to toggle active status:', error);
+    }
+  };
+  
+  const handleUpdateUser = async () => {
     if (!editingUser || !editingUser.name || !editingUser.email) {
       toast({
         title: language === 'en' ? 'Error' : 'خطأ',
@@ -188,41 +175,25 @@ export default function AdminUsersPage() {
       return;
     }
     
-    setUsers(users.map(u => 
-      u.id === editingUser.id ? editingUser : u
-    ));
-    
-    setEditingUser(null);
-    
-    toast({
-      title: language === 'en' ? 'Success' : 'نجاح',
-      description: language === 'en' 
-        ? 'User updated successfully' 
-        : 'تم تحديث المستخدم بنجاح',
-    });
+    try {
+      await updateUser(editingUser);
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+    } catch (error) {
+      console.error('Failed to update user:', error);
+    }
   };
   
-  const handleDeleteUser = (userId: string) => {
-    // Prevent deleting yourself
-    if (userId === user.id) {
-      toast({
-        title: language === 'en' ? 'Error' : 'خطأ',
-        description: language === 'en' 
-          ? 'You cannot delete your own account' 
-          : 'لا يمكنك حذف حسابك الخاص',
-        variant: 'destructive',
-      });
-      return;
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    
+    try {
+      await deleteUser(userToDelete);
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete user:', error);
     }
-    
-    setUsers(users.filter(u => u.id !== userId));
-    
-    toast({
-      title: language === 'en' ? 'Success' : 'نجاح',
-      description: language === 'en' 
-        ? 'User deleted successfully' 
-        : 'تم حذف المستخدم بنجاح',
-    });
   };
   
   const getRoleIcon = (role: UserRole) => {
@@ -260,13 +231,15 @@ export default function AdminUsersPage() {
           {language === 'en' ? 'User Management' : 'إدارة المستخدمين'}
         </h1>
         
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-gold hover:bg-gold/90 text-navy">
-              <UserPlus className="mr-2 h-4 w-4" />
-              {language === 'en' ? 'Add User' : 'إضافة مستخدم'}
-            </Button>
-          </DialogTrigger>
+        <Button 
+          onClick={() => setIsDialogOpen(true)}
+          className="bg-gold hover:bg-gold/90 text-navy"
+        >
+          <UserPlus className="mr-2 h-4 w-4" />
+          {language === 'en' ? 'Add User' : 'إضافة مستخدم'}
+        </Button>
+        
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="bg-navy-light border-gold/20 text-gold">
             <DialogHeader>
               <DialogTitle className={language === 'ar' ? 'font-cairo' : ''}>
@@ -281,10 +254,11 @@ export default function AdminUsersPage() {
             
             <div className="space-y-4 py-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gold">
+                <Label htmlFor="name" className="text-sm font-medium text-gold">
                   {language === 'en' ? 'Name' : 'الاسم'}
-                </label>
+                </Label>
                 <Input 
+                  id="name"
                   placeholder={language === 'en' ? 'Enter name' : 'أدخل الاسم'}
                   value={newUser.name}
                   onChange={(e) => setNewUser({...newUser, name: e.target.value})}
@@ -293,10 +267,11 @@ export default function AdminUsersPage() {
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gold">
+                <Label htmlFor="email" className="text-sm font-medium text-gold">
                   {language === 'en' ? 'Email' : 'البريد الإلكتروني'}
-                </label>
+                </Label>
                 <Input 
+                  id="email"
                   type="email"
                   placeholder={language === 'en' ? 'Enter email' : 'أدخل البريد الإلكتروني'}
                   value={newUser.email}
@@ -306,10 +281,11 @@ export default function AdminUsersPage() {
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gold">
+                <Label htmlFor="password" className="text-sm font-medium text-gold">
                   {language === 'en' ? 'Password' : 'كلمة المرور'}
-                </label>
+                </Label>
                 <Input 
+                  id="password"
                   type="password"
                   placeholder={language === 'en' ? 'Enter password' : 'أدخل كلمة المرور'}
                   value={newUser.password}
@@ -319,14 +295,14 @@ export default function AdminUsersPage() {
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gold">
+                <Label htmlFor="role" className="text-sm font-medium text-gold">
                   {language === 'en' ? 'Role' : 'الدور'}
-                </label>
+                </Label>
                 <Select 
                   value={newUser.role}
                   onValueChange={(value: UserRole) => setNewUser({...newUser, role: value})}
                 >
-                  <SelectTrigger className="border-gold/20 bg-navy-dark text-gold">
+                  <SelectTrigger id="role" className="border-gold/20 bg-navy-dark text-gold">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-navy-dark border-gold/20">
@@ -345,6 +321,18 @@ export default function AdminUsersPage() {
                   </SelectContent>
                 </Select>
               </div>
+              
+              <div className="flex items-center space-x-2 pt-2">
+                <Switch 
+                  id="active" 
+                  checked={newUser.active}
+                  onCheckedChange={(checked) => setNewUser({...newUser, active: checked})}
+                  className="data-[state=checked]:bg-gold"
+                />
+                <Label htmlFor="active" className="text-sm font-medium text-gold">
+                  {language === 'en' ? 'Active Account' : 'حساب نشط'}
+                </Label>
+              </div>
             </div>
             
             <DialogFooter>
@@ -360,138 +348,239 @@ export default function AdminUsersPage() {
       </div>
       
       <div className="bg-navy-light border border-gold/10 rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-gold/10">
-              <TableHead className="text-gold/70">
-                {language === 'en' ? 'User' : 'المستخدم'}
-              </TableHead>
-              <TableHead className="text-gold/70">
-                {language === 'en' ? 'Email' : 'البريد الإلكتروني'}
-              </TableHead>
-              <TableHead className="text-gold/70">
-                {language === 'en' ? 'Role' : 'الدور'}
-              </TableHead>
-              <TableHead className="text-gold/70 text-right">
-                {language === 'en' ? 'Actions' : 'الإجراءات'}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((u) => (
-              <TableRow key={u.id} className="border-gold/10">
-                <TableCell className="text-gold">
-                  <div className="flex items-center gap-3">
-                    <img 
-                      src={u.avatar} 
-                      alt={u.name}
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
-                    <span>{u.name}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-gold">
-                  {u.email}
-                </TableCell>
-                <TableCell className="text-gold">
-                  <div className="flex items-center gap-2">
-                    {getRoleIcon(u.role)}
-                    <Select 
-                      value={u.role}
-                      onValueChange={(value: UserRole) => handleUpdateRole(u.id, value)}
-                    >
-                      <SelectTrigger className="border-none bg-transparent h-8 p-0 text-gold hover:bg-gold/10 focus:ring-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-navy-dark border-gold/20">
-                        <SelectItem value="user" className="text-gold focus:bg-gold/10 focus:text-gold">
-                          {language === 'en' ? 'Buyer' : 'مشتري'}
-                        </SelectItem>
-                        <SelectItem value="seller" className="text-gold focus:bg-gold/10 focus:text-gold">
-                          {language === 'en' ? 'Seller' : 'بائع'}
-                        </SelectItem>
-                        <SelectItem value="shipping" className="text-gold focus:bg-gold/10 focus:text-gold">
-                          {language === 'en' ? 'Shipping' : 'شحن'}
-                        </SelectItem>
-                        <SelectItem value="admin" className="text-gold focus:bg-gold/10 focus:text-gold">
-                          {language === 'en' ? 'Admin' : 'مدير'}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end items-center gap-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-gold/70 hover:text-gold hover:bg-gold/10"
-                          onClick={() => setEditingUser(u)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="bg-navy-light border-gold/20 text-gold">
-                        <DialogHeader>
-                          <DialogTitle className={language === 'ar' ? 'font-cairo' : ''}>
-                            {language === 'en' ? 'Edit User' : 'تعديل المستخدم'}
-                          </DialogTitle>
-                        </DialogHeader>
-                        
-                        {editingUser && (
-                          <div className="space-y-4 py-2">
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium text-gold">
-                                {language === 'en' ? 'Name' : 'الاسم'}
-                              </label>
-                              <Input 
-                                value={editingUser.name}
-                                onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
-                                className="bg-navy-dark border-gold/20 text-gold"
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium text-gold">
-                                {language === 'en' ? 'Email' : 'البريد الإلكتروني'}
-                              </label>
-                              <Input 
-                                value={editingUser.email}
-                                onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
-                                className="bg-navy-dark border-gold/20 text-gold"
-                              />
-                            </div>
-                          </div>
-                        )}
-                        
-                        <DialogFooter>
-                          <Button 
-                            onClick={handleUpdateUser}
-                            className="bg-gold hover:bg-gold/90 text-navy"
-                          >
-                            {language === 'en' ? 'Save Changes' : 'حفظ التغييرات'}
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                    
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-gold/70 hover:text-red-500 hover:bg-red-500/10"
-                      onClick={() => handleDeleteUser(u.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-gold/10">
+                <TableHead className="text-gold/70">
+                  {language === 'en' ? 'User' : 'المستخدم'}
+                </TableHead>
+                <TableHead className="text-gold/70">
+                  {language === 'en' ? 'Email' : 'البريد الإلكتروني'}
+                </TableHead>
+                <TableHead className="text-gold/70">
+                  {language === 'en' ? 'Role' : 'الدور'}
+                </TableHead>
+                <TableHead className="text-gold/70">
+                  {language === 'en' ? 'Status' : 'الحالة'}
+                </TableHead>
+                <TableHead className="text-gold/70 text-right">
+                  {language === 'en' ? 'Actions' : 'الإجراءات'}
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {allUsers.map((u) => (
+                <TableRow key={u.id} className="border-gold/10">
+                  <TableCell className="text-gold">
+                    <div className="flex items-center gap-3">
+                      <img 
+                        src={u.avatar} 
+                        alt={u.name}
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                      <span>{u.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-gold">
+                    {u.email}
+                  </TableCell>
+                  <TableCell className="text-gold">
+                    <div className="flex items-center gap-2">
+                      {getRoleIcon(u.role)}
+                      <Select 
+                        value={u.role}
+                        onValueChange={(value: UserRole) => handleUpdateRole(u.id, value)}
+                      >
+                        <SelectTrigger className="border-none bg-transparent h-8 p-0 text-gold hover:bg-gold/10 focus:ring-0">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-navy-dark border-gold/20">
+                          <SelectItem value="user" className="text-gold focus:bg-gold/10 focus:text-gold">
+                            {language === 'en' ? 'Buyer' : 'مشتري'}
+                          </SelectItem>
+                          <SelectItem value="seller" className="text-gold focus:bg-gold/10 focus:text-gold">
+                            {language === 'en' ? 'Seller' : 'بائع'}
+                          </SelectItem>
+                          <SelectItem value="shipping" className="text-gold focus:bg-gold/10 focus:text-gold">
+                            {language === 'en' ? 'Shipping' : 'شحن'}
+                          </SelectItem>
+                          <SelectItem value="admin" className="text-gold focus:bg-gold/10 focus:text-gold">
+                            {language === 'en' ? 'Admin' : 'مدير'}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-gold">
+                    <div className="flex items-center gap-2">
+                      {u.active !== false ? (
+                        <Badge variant="outline" className="bg-green-500/10 text-green-300 border-green-500/20">
+                          {language === 'en' ? 'Active' : 'نشط'}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-500/10 text-red-300 border-red-500/20">
+                          {language === 'en' ? 'Inactive' : 'غير نشط'}
+                        </Badge>
+                      )}
+                      <Switch 
+                        checked={u.active !== false}
+                        onCheckedChange={(checked) => handleToggleActive(u.id, checked)}
+                        className="data-[state=checked]:bg-gold"
+                        disabled={u.id === user.id} // Can't deactivate yourself
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-gold/70 hover:text-gold hover:bg-gold/10"
+                        onClick={() => {
+                          setEditingUser(u);
+                          setIsEditDialogOpen(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-gold/70 hover:text-red-500 hover:bg-red-500/10"
+                        disabled={u.id === user.id} // Can't delete yourself
+                        onClick={() => {
+                          setUserToDelete(u.id);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
+      
+      {/* Edit user dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="bg-navy-light border-gold/20 text-gold">
+          <DialogHeader>
+            <DialogTitle className={language === 'ar' ? 'font-cairo' : ''}>
+              {language === 'en' ? 'Edit User' : 'تعديل المستخدم'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {editingUser && (
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name" className="text-sm font-medium text-gold">
+                  {language === 'en' ? 'Name' : 'الاسم'}
+                </Label>
+                <Input 
+                  id="edit-name"
+                  value={editingUser.name}
+                  onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
+                  className="bg-navy-dark border-gold/20 text-gold"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-email" className="text-sm font-medium text-gold">
+                  {language === 'en' ? 'Email' : 'البريد الإلكتروني'}
+                </Label>
+                <Input 
+                  id="edit-email"
+                  value={editingUser.email}
+                  onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
+                  className="bg-navy-dark border-gold/20 text-gold"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-role" className="text-sm font-medium text-gold">
+                  {language === 'en' ? 'Role' : 'الدور'}
+                </Label>
+                <Select 
+                  value={editingUser.role}
+                  onValueChange={(value: UserRole) => setEditingUser({...editingUser, role: value})}
+                >
+                  <SelectTrigger id="edit-role" className="border-gold/20 bg-navy-dark text-gold">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-navy-dark border-gold/20">
+                    <SelectItem value="user" className="text-gold focus:bg-gold/10 focus:text-gold">
+                      {language === 'en' ? 'Buyer' : 'مشتري'}
+                    </SelectItem>
+                    <SelectItem value="seller" className="text-gold focus:bg-gold/10 focus:text-gold">
+                      {language === 'en' ? 'Seller' : 'بائع'}
+                    </SelectItem>
+                    <SelectItem value="shipping" className="text-gold focus:bg-gold/10 focus:text-gold">
+                      {language === 'en' ? 'Shipping' : 'شحن'}
+                    </SelectItem>
+                    <SelectItem value="admin" className="text-gold focus:bg-gold/10 focus:text-gold">
+                      {language === 'en' ? 'Admin' : 'مدير'}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center space-x-2 pt-2">
+                <Switch 
+                  id="edit-active" 
+                  checked={editingUser.active !== false}
+                  onCheckedChange={(checked) => setEditingUser({...editingUser, active: checked})}
+                  className="data-[state=checked]:bg-gold"
+                  disabled={editingUser.id === user.id} // Can't deactivate yourself
+                />
+                <Label htmlFor="edit-active" className="text-sm font-medium text-gold">
+                  {language === 'en' ? 'Active Account' : 'حساب نشط'}
+                </Label>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              onClick={handleUpdateUser}
+              className="bg-gold hover:bg-gold/90 text-navy"
+            >
+              {language === 'en' ? 'Save Changes' : 'حفظ التغييرات'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="bg-navy-light border-gold/20 text-gold">
+          <AlertDialogHeader>
+            <AlertDialogTitle className={language === 'ar' ? 'font-cairo' : ''}>
+              {language === 'en' ? 'Delete User' : 'حذف المستخدم'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gold/70">
+              {language === 'en' 
+                ? 'Are you sure you want to delete this user? This action cannot be undone.' 
+                : 'هل أنت متأكد من أنك تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-gold/30 text-gold hover:bg-gold/10 hover:text-gold">
+              {language === 'en' ? 'Cancel' : 'إلغاء'}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteUser}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              {language === 'en' ? 'Delete' : 'حذف'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageLayout>
   );
 }

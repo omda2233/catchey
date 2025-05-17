@@ -11,6 +11,7 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  active?: boolean;
 }
 
 // Define auth context shape
@@ -20,6 +21,10 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
+  updateUser: (user: User) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
+  addUser: (user: Omit<User, 'id'> & { password: string }) => Promise<void>;
+  allUsers: User[];
 }
 
 // Create context
@@ -34,6 +39,7 @@ const MOCK_USERS: User[] = [
     email: 'admin@test.com',
     role: 'admin',
     avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=1A1F2C&color=E6B54A',
+    active: true,
   },
   // Seller User
   {
@@ -42,6 +48,7 @@ const MOCK_USERS: User[] = [
     email: 'seller@test.com',
     role: 'seller',
     avatar: 'https://ui-avatars.com/api/?name=Seller+User&background=1A1F2C&color=E6B54A',
+    active: true,
   },
   // Buyer User (Regular User)
   {
@@ -50,6 +57,7 @@ const MOCK_USERS: User[] = [
     email: 'buyer@test.com',
     role: 'user',
     avatar: 'https://ui-avatars.com/api/?name=Buyer+User&background=1A1F2C&color=E6B54A',
+    active: true,
   },
   // Shipping User
   {
@@ -58,6 +66,7 @@ const MOCK_USERS: User[] = [
     email: 'transport@test.com',
     role: 'shipping',
     avatar: 'https://ui-avatars.com/api/?name=Transport+User&background=1A1F2C&color=E6B54A',
+    active: true,
   },
   // Keep existing users for backward compatibility
   {
@@ -66,6 +75,7 @@ const MOCK_USERS: User[] = [
     email: 'user@example.com',
     role: 'user',
     avatar: 'https://ui-avatars.com/api/?name=John+User&background=1A1F2C&color=E6B54A',
+    active: true,
   },
   {
     id: '6',
@@ -73,6 +83,7 @@ const MOCK_USERS: User[] = [
     email: 'seller@example.com',
     role: 'seller',
     avatar: 'https://ui-avatars.com/api/?name=Sarah+Seller&background=1A1F2C&color=E6B54A',
+    active: true,
   },
   {
     id: '7',
@@ -80,6 +91,7 @@ const MOCK_USERS: User[] = [
     email: 'shipping@example.com',
     role: 'shipping',
     avatar: 'https://ui-avatars.com/api/?name=Mike+Shipper&background=1A1F2C&color=E6B54A',
+    active: true,
   },
   {
     id: '8',
@@ -87,12 +99,14 @@ const MOCK_USERS: User[] = [
     email: 'admin@example.com',
     role: 'admin',
     avatar: 'https://ui-avatars.com/api/?name=Amanda+Admin&background=1A1F2C&color=E6B54A',
+    active: true,
   },
 ];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [users, setUsers] = useState<User[]>(MOCK_USERS);
   const { toast } = useToast();
 
   // Mock sign in function
@@ -102,10 +116,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const foundUser = MOCK_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
+      const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      
+      if (!foundUser) {
+        throw new Error('User not found');
+      }
+
+      if (foundUser.active === false) {
+        throw new Error('This account has been deactivated');
+      }
       
       // Use "test123" as the password for all test users
-      if (foundUser && (password === 'test123' || password === 'password')) {
+      if (password === 'test123' || password === 'password') {
         setUser(foundUser);
         toast({
           title: "Signed in successfully",
@@ -135,22 +157,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const existingUser = MOCK_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
+      const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
       
       if (existingUser) {
         throw new Error('Email already in use');
       }
       
       const newUser: User = {
-        id: (MOCK_USERS.length + 1).toString(),
+        id: (users.length + 1).toString(),
         name,
         email,
         role,
+        active: true,
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1A1F2C&color=E6B54A`,
       };
       
-      // In a real app, we would save this user to the database
-      // For this mock, we'll just set the current user
+      // Add user to list
+      setUsers(prevUsers => [...prevUsers, newUser]);
+      
+      // Set current user
       setUser(newUser);
       
       toast({
@@ -193,8 +218,128 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Update user function
+  const updateUser = async (updatedUser: User) => {
+    setIsLoading(true);
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Update users list
+      setUsers(prevUsers => 
+        prevUsers.map(u => 
+          u.id === updatedUser.id ? updatedUser : u
+        )
+      );
+      
+      // Update current user if it's the same user
+      if (user && user.id === updatedUser.id) {
+        setUser(updatedUser);
+      }
+      
+      toast({
+        title: "User updated",
+        description: "User information has been updated successfully.",
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "Update failed",
+        description: "There was a problem updating the user.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Delete user function
+  const deleteUser = async (userId: string) => {
+    setIsLoading(true);
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Cannot delete yourself
+      if (user && user.id === userId) {
+        throw new Error("You cannot delete your own account");
+      }
+      
+      // Remove user from list
+      setUsers(prevUsers => prevUsers.filter(u => u.id !== userId));
+      
+      toast({
+        title: "User deleted",
+        description: "User has been deleted successfully.",
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "There was a problem deleting the user.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Add new user function (admin only)
+  const addUser = async (userData: Omit<User, 'id'> & { password: string }) => {
+    setIsLoading(true);
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const existingUser = users.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
+      
+      if (existingUser) {
+        throw new Error('Email already in use');
+      }
+      
+      const newUser: User = {
+        id: (users.length + 1).toString(),
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+        active: userData.active !== false,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=1A1F2C&color=E6B54A`,
+      };
+      
+      // Add user to list
+      setUsers(prevUsers => [...prevUsers, newUser]);
+      
+      toast({
+        title: "User added",
+        description: "New user has been added successfully.",
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "Add user failed",
+        description: error instanceof Error ? error.message : "There was a problem adding the user.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      signIn, 
+      signUp, 
+      signOut, 
+      updateUser, 
+      deleteUser, 
+      addUser,
+      allUsers: users
+    }}>
       {children}
     </AuthContext.Provider>
   );

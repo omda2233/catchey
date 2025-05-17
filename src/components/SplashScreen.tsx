@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from 'react';
 import { Logo } from './Logo';
-import { useNavigate } from 'react-router-dom';
 
 export const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [isVisible, setIsVisible] = useState(true);

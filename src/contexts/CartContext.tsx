@@ -21,6 +21,7 @@ interface CartContextType {
   totalPrice: number;
   deliveryMethod: DeliveryMethod;
   setDeliveryMethod: (method: DeliveryMethod) => void;
+  itemsBySeller: Record<string, CartItem[]>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -47,6 +48,16 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
+
+  // Group items by seller
+  const itemsBySeller = items.reduce((grouped, item) => {
+    const sellerId = item.product.sellerId || 'unknown';
+    if (!grouped[sellerId]) {
+      grouped[sellerId] = [];
+    }
+    grouped[sellerId].push(item);
+    return grouped;
+  }, {} as Record<string, CartItem[]>);
 
   const addToCart = (product: Product, quantity: number) => {
     setItems(currentItems => {
@@ -109,7 +120,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         totalItems, 
         totalPrice,
         deliveryMethod,
-        setDeliveryMethod
+        setDeliveryMethod,
+        itemsBySeller
       }}
     >
       {children}

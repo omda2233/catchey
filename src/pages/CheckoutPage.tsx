@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -21,9 +22,38 @@ import {
   Truck, 
   MapPin, 
   CreditCard,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+// Group cart items by seller
+const groupItemsBySeller = (items: any[]) => {
+  const grouped: Record<string, any[]> = {};
+  
+  items.forEach(item => {
+    // Assuming each product has a sellerId property
+    const sellerId = item.product.sellerId || 'unknown';
+    if (!grouped[sellerId]) {
+      grouped[sellerId] = [];
+    }
+    grouped[sellerId].push(item);
+  });
+  
+  return grouped;
+};
+
+// Calculate total for a group of items
+const calculateGroupTotal = (items: any[]) => {
+  return items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+};
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart, deliveryMethod, setDeliveryMethod } = useCart();
@@ -35,6 +65,9 @@ export default function CheckoutPage() {
   const [shippingAddress, setShippingAddress] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  
+  // Group items by seller
+  const itemsBySeller = groupItemsBySeller(items);
   
   // If cart is empty or not logged in, redirect
   if (items.length === 0 && !isComplete) {
@@ -59,12 +92,24 @@ export default function CheckoutPage() {
       return;
     }
     
+    // Calculate payment amount based on delivery method
+    const paymentAmount = deliveryMethod === 'pickup' 
+      ? totalPrice * 0.2 // 20% deposit for pickup
+      : totalPrice;      // Full amount for shipping
+    
     setIsProcessing(true);
     
     // Simulate processing delay
     setTimeout(() => {
       setIsProcessing(false);
       setIsComplete(true);
+      
+      // In a real implementation, we would:
+      // 1. Create separate orders for each seller
+      // 2. Set status to pending_approval
+      // 3. Notify sellers
+      // 4. Process payment (deposit or full amount)
+      
       clearCart();
     }, 1500);
   };
@@ -79,14 +124,31 @@ export default function CheckoutPage() {
           <h1 className={`text-2xl font-bold mb-2 ${language === 'ar' ? 'font-cairo' : ''}`}>
             {language === 'en' ? 'Order Complete!' : 'تم إكمال الطلب!'}
           </h1>
+          <p className={`text-gold/70 mb-2 ${language === 'ar' ? 'font-cairo' : ''}`}>
+            {deliveryMethod === 'pickup'
+              ? language === 'en' 
+                ? 'Your deposit has been paid. Waiting for seller approval.' 
+                : 'تم دفع العربون. في انتظار موافقة البائع.'
+              : language === 'en' 
+                ? 'Your payment has been completed. Waiting for seller approval.' 
+                : 'تم إكمال الدفع. في انتظار موافقة البائع.'
+            }
+          </p>
           <p className={`text-gold/70 mb-6 ${language === 'ar' ? 'font-cairo' : ''}`}>
             {language === 'en' 
-              ? 'Thank you for your purchase. Your order has been received.' 
-              : 'شكراً لك على الشراء. تم استلام طلبك.'}
+              ? 'You will receive a confirmation once your order is approved.' 
+              : 'ستتلقى تأكيدًا بمجرد الموافقة على طلبك.'}
           </p>
           <Button 
+            onClick={() => navigate('/dashboard')}
+            className="bg-gold hover:bg-gold/90 text-navy mr-2"
+          >
+            {language === 'en' ? 'View My Orders' : 'عرض طلباتي'}
+          </Button>
+          <Button 
+            variant="outline"
             onClick={() => navigate('/')}
-            className="bg-gold hover:bg-gold/90 text-navy"
+            className="border-gold/30 text-gold hover:text-gold hover:border-gold"
           >
             {language === 'en' ? 'Back to Home' : 'العودة إلى الصفحة الرئيسية'}
           </Button>
@@ -124,6 +186,18 @@ export default function CheckoutPage() {
                   >
                     <MapPin className="mr-2 h-4 w-4 text-gold/70" />
                     {language === 'en' ? 'Pickup (Reservation)' : 'استلام (حجز)'}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="ml-2 h-4 w-4 text-gold/50 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-navy-dark text-gold border-gold/20">
+                          {language === 'en' 
+                            ? 'Only 20% deposit required for pickup orders' 
+                            : 'مطلوب فقط 20٪ عربون للطلبات التي سيتم استلامها'}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </Label>
                 </div>
                 
@@ -135,6 +209,18 @@ export default function CheckoutPage() {
                   >
                     <Truck className="mr-2 h-4 w-4 text-gold/70" />
                     {language === 'en' ? 'Shipping' : 'شحن'}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="ml-2 h-4 w-4 text-gold/50 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-navy-dark text-gold border-gold/20">
+                          {language === 'en' 
+                            ? 'Full payment required for shipping orders' 
+                            : 'الدفع الكامل مطلوب لطلبات الشحن'}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </Label>
                 </div>
               </RadioGroup>
@@ -162,16 +248,21 @@ export default function CheckoutPage() {
               <CardTitle className={language === 'ar' ? 'font-cairo' : ''}>
                 {language === 'en' ? 'Payment Method' : 'طريقة الدفع'}
               </CardTitle>
+              <CardDescription className="text-gold/60">
+                {language === 'en' 
+                  ? 'All payments are processed through the Admin\'s InstaPay account'
+                  : 'تتم معالجة جميع المدفوعات من خلال حساب InstaPay الخاص بالمسؤول'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="credit-card" id="credit-card" className="border-gold/50 text-gold" />
+                <RadioGroupItem checked value="instapay" id="instapay" className="border-gold/50 text-gold" />
                 <Label 
-                  htmlFor="credit-card" 
+                  htmlFor="instapay" 
                   className="flex items-center cursor-pointer text-gold"
                 >
                   <CreditCard className="mr-2 h-4 w-4 text-gold/70" />
-                  {language === 'en' ? 'Credit Card' : 'بطاقة الائتمان'}
+                  {language === 'en' ? 'InstaPay' : 'انستاباي'}
                 </Label>
               </div>
               <p className="text-gold/60 text-xs mt-2">
@@ -189,38 +280,79 @@ export default function CheckoutPage() {
               <CardTitle className={language === 'ar' ? 'font-cairo' : ''}>
                 {language === 'en' ? 'Order Summary' : 'ملخص الطلب'}
               </CardTitle>
+              {Object.keys(itemsBySeller).length > 1 && (
+                <CardDescription className="text-gold/60">
+                  <AlertCircle className="inline-block mr-1 h-4 w-4" />
+                  {language === 'en' 
+                    ? 'This order contains items from multiple sellers'
+                    : 'يحتوي هذا الطلب على عناصر من بائعين متعددين'}
+                </CardDescription>
+              )}
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 mb-4">
-                {items.map(item => {
-                  const displayName = language === 'en' ? item.product.name : (item.product.nameAr || item.product.name);
-                  return (
-                    <div key={item.product.id} className="flex justify-between text-gold text-sm">
-                      <span>{displayName} × {item.quantity}</span>
-                      <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+              {Object.entries(itemsBySeller).map(([sellerId, sellerItems], index) => (
+                <div key={sellerId} className={index > 0 ? "mt-4 pt-4 border-t border-gold/10" : ""}>
+                  <div className="text-sm text-gold/70 mb-2">
+                    {language === 'en' ? 'Seller' : 'البائع'}: {sellerItems[0]?.product.sellerName || 'Unknown Seller'}
+                  </div>
+                  <div className="space-y-2">
+                    {sellerItems.map(item => {
+                      const displayName = language === 'en' ? item.product.name : (item.product.nameAr || item.product.name);
+                      return (
+                        <div key={item.product.id} className="flex justify-between text-gold text-sm">
+                          <span>{displayName} × {item.quantity}</span>
+                          <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                      );
+                    })}
+                    <div className="flex justify-between text-gold text-sm font-semibold">
+                      <span>{language === 'en' ? 'Subtotal' : 'المجموع الفرعي'}</span>
+                      <span>${calculateGroupTotal(sellerItems).toFixed(2)}</span>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                </div>
+              ))}
               
               <Separator className="my-4 bg-gold/10" />
               
-              <div className="flex justify-between text-gold font-bold my-4">
-                <span>{language === 'en' ? 'Total' : 'المجموع الكلي'}</span>
+              <div className="flex justify-between text-gold text-sm mb-2">
+                <span>{language === 'en' ? 'Total' : 'المجموع'}</span>
                 <span>${totalPrice.toFixed(2)}</span>
               </div>
+              
+              {deliveryMethod === 'pickup' && (
+                <>
+                  <div className="flex justify-between text-gold/70 text-sm mb-2">
+                    <span>{language === 'en' ? 'Required Deposit (20%)' : 'العربون المطلوب (20٪)'}</span>
+                    <span>${(totalPrice * 0.2).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-gold/70 text-sm">
+                    <span>{language === 'en' ? 'Remaining Balance' : 'الرصيد المتبقي'}</span>
+                    <span>${(totalPrice * 0.8).toFixed(2)}</span>
+                  </div>
+                </>
+              )}
             </CardContent>
             <CardFooter>
-              <Button 
-                onClick={handleCheckout}
-                disabled={isProcessing}
-                className="w-full bg-gold hover:bg-gold/90 text-navy"
-              >
-                {isProcessing 
-                  ? language === 'en' ? 'Processing...' : 'جاري المعالجة...'
-                  : language === 'en' ? 'Complete Order' : 'إكمال الطلب'
-                }
-              </Button>
+              <div className="w-full">
+                <Button 
+                  onClick={handleCheckout}
+                  disabled={isProcessing}
+                  className="w-full bg-gold hover:bg-gold/90 text-navy"
+                >
+                  {isProcessing 
+                    ? language === 'en' ? 'Processing...' : 'جاري المعالجة...'
+                    : deliveryMethod === 'pickup'
+                      ? language === 'en' ? 'Pay Deposit' : 'دفع العربون'
+                      : language === 'en' ? 'Pay Full Amount' : 'دفع المبلغ كاملاً'
+                  }
+                </Button>
+                <p className="text-xs text-gold/60 text-center mt-2">
+                  {language === 'en' 
+                    ? 'Your order will await seller approval after payment'
+                    : 'سينتظر طلبك موافقة البائع بعد الدفع'}
+                </p>
+              </div>
             </CardFooter>
           </Card>
         </div>

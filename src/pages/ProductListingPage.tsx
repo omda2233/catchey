@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { ProductCard } from '@/components/ProductCard';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { MOCK_PRODUCTS, ProductCategory } from '@/models/Product';
+import { MOCK_PRODUCTS, ProductCategory, Product } from '@/models/Product';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 

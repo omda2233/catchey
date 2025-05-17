@@ -74,7 +74,7 @@ export default function CartPage() {
                       <TableCell className="text-gold">
                         <div className="flex items-center gap-3">
                           <img 
-                            src={item.product.images[0]} 
+                            src={item.product.images?.[0] || item.product.image} 
                             alt={displayName}
                             className="h-16 w-16 object-cover rounded"
                           />
@@ -100,7 +100,7 @@ export default function CartPage() {
                           <button
                             type="button"
                             className="px-3 py-1 text-gold hover:bg-gold/10 transition-colors"
-                            onClick={() => updateQuantity(item.product.id, Math.min(item.product.inStock, item.quantity + 1))}
+                            onClick={() => updateQuantity(item.product.id, Math.min(item.product.inStock as number, item.quantity + 1))}
                             aria-label="Increase quantity"
                           >
                             +

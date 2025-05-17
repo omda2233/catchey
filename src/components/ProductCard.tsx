@@ -32,7 +32,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
       )}>
         <div className="absolute inset-0 bg-gradient-to-t from-navy to-transparent z-10"></div>
         <img
-          src={product.images[0]}
+          src={product.images[0] || product.image}
           alt={displayName}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
@@ -58,7 +58,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
           <div className="flex items-center gap-1 text-gold/70 mt-1 mb-2">
             <Star className="h-4 w-4 fill-gold" />
             <span className="text-sm">{product.rating}</span>
-            <span className="text-xs text-gold/50">({product.reviewCount})</span>
+            <span className="text-xs text-gold/50">({product.reviewCount || 0})</span>
           </div>
           
           <p className={cn(

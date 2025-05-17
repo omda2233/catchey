@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -106,7 +107,7 @@ export default function ProductDetailPage() {
     <PageLayout>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
-          <ProductCarousel images={product.images} productName={displayName} />
+          <ProductCarousel images={product.images || [product.image]} productName={displayName} />
         </div>
         
         <div className="flex flex-col">
@@ -131,7 +132,7 @@ export default function ProductDetailPage() {
                 ))}
               </div>
               <span className="text-sm text-gold/70">
-                ({product.reviewCount} {language === 'en' ? 'reviews' : 'تقييمات'})
+                ({product.reviewCount || 0} {language === 'en' ? 'reviews' : 'تقييمات'})
               </span>
             </div>
             
@@ -140,7 +141,7 @@ export default function ProductDetailPage() {
                 ${product.price.toFixed(2)}
               </span>
               <span className="text-sm text-gold/50">
-                {product.currency}
+                {product.currency || 'USD'}
               </span>
             </div>
           </div>
@@ -199,7 +200,7 @@ export default function ProductDetailPage() {
               <button
                 type="button"
                 className="px-3 py-2 text-gold hover:bg-gold/10 transition-colors"
-                onClick={() => setQuantity(Math.min(product.inStock, quantity + 1))}
+                onClick={() => setQuantity(Math.min(product.inStock as number, quantity + 1))}
                 aria-label="Increase quantity"
               >
                 +

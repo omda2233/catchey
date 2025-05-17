@@ -130,6 +130,7 @@ export default function SellerProductsPage() {
       price: newProduct.price,
       description: newProduct.description,
       descriptionAr: newProduct.descriptionAr,
+      image: newProduct.images[0],
       images: newProduct.images,
       inStock: newProduct.inStock,
       rating: 0,
@@ -413,7 +414,7 @@ export default function SellerProductsPage() {
                     <TableCell className="text-gold">
                       <div className="flex items-center gap-3">
                         <img 
-                          src={product.images[0]} 
+                          src={product.images?.[0] || product.image} 
                           alt={displayName}
                           className="h-10 w-10 object-cover rounded"
                         />
@@ -442,7 +443,7 @@ export default function SellerProductsPage() {
                     <TableCell className="text-gold">
                       <div className="flex items-center">
                         <Star className="h-3.5 w-3.5 text-gold/80 fill-gold mr-1" />
-                        {product.rating.toFixed(1)} ({product.reviewCount})
+                        {product.rating.toFixed(1)} ({product.reviewCount || 0})
                       </div>
                     </TableCell>
                     <TableCell className="text-right">

@@ -1,47 +1,21 @@
 
-import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 
-interface LogoProps {
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
+export interface LogoProps {
+  showText?: boolean;
 }
 
-export const Logo = ({ size = 'md', className }: LogoProps) => {
-  const { t } = useLanguage();
-  const navigate = useNavigate();
-  
-  const sizeClasses = {
-    sm: 'h-8',
-    md: 'h-12',
-    lg: 'h-16',
-  };
-
+export function Logo({ showText = true }: LogoProps) {
   return (
-    <div 
-      className={cn("flex items-center gap-2 cursor-pointer", className)}
-      onClick={() => navigate('/')}
-    >
-      <div className={cn('relative', sizeClasses[size])}>
-        <img
-          src="/lovable-uploads/05d5cc7a-0903-4779-af3e-d855b231fdd8.png"
-          alt="Catchy Logo"
-          className={cn('aspect-square object-contain', sizeClasses[size])}
-        />
-      </div>
-      <span 
-        className={cn(
-          "font-cairo font-bold gold-text-gradient",
-          {
-            'text-lg': size === 'sm',
-            'text-2xl': size === 'md',
-            'text-3xl': size === 'lg',
-          }
-        )}
-      >
-        {t('app.name')}
-      </span>
+    <div className="flex items-center">
+      <img 
+        src="/lovable-uploads/822241b3-b922-4024-800c-50fc579566b1.png"
+        alt="Fabric Market Logo" 
+        className="h-8 w-auto" 
+      />
+      {showText && (
+        <span className="ml-2 text-lg font-bold text-gold">Fabric Market</span>
+      )}
     </div>
   );
-};
+}

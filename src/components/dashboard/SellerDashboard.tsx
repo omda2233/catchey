@@ -1,127 +1,135 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useOrders } from "@/contexts/OrderContext";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrders } from "@/contexts/OrderContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useNavigate } from "react-router-dom";
 import { Order } from "@/models/Order";
 
 export default function SellerDashboard() {
-  const { getAllOrders } = useOrders();
-  const { language } = useLanguage();
   const { user } = useAuth();
-  
-  const allOrders = getAllOrders();
-  
-  // Filter orders for this seller
-  const sellerOrders = React.useMemo(() => {
-    return allOrders.filter(order => 
-      order.items.some(item => item.product.sellerId === user?.id)
-    );
-  }, [allOrders, user?.id]);
-  
-  // Calculate analytics
-  const pendingApproval = sellerOrders.filter(o => o.status === 'pending_approval').length;
-  const totalSales = sellerOrders
-    .filter(o => ['completed', 'shipped', 'delivered'].includes(o.status))
-    .reduce((sum, order) => {
-      const sellerItems = order.items.filter(item => item.product.sellerId === user?.id);
-      return sum + sellerItems.reduce((itemSum, item) => itemSum + (item.product.price * item.quantity), 0);
-    }, 0);
-  
+  const { getSellerOrders, updateOrderStatus } = useOrders();
+  const { language } = useLanguage();
+  const navigate = useNavigate();
+
+  const sellerOrders = getSellerOrders();
+  const pendingOrders = sellerOrders.filter((order) => order.status === "pending_approval");
+
+  const handleApprove = async (order: Order) => {
+    await updateOrderStatus(order.id, "approved");
+  };
+
+  const handleReject = async (order: Order) => {
+    await updateOrderStatus(order.id, "rejected");
+  };
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {/* Summary Cards */}
+    <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            {language === "en" ? "Total Sales" : "إجمالي المبيعات"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">${totalSales.toFixed(2)}</div>
-          <p className="text-xs text-muted-foreground">
-            {language === "en" ? "From your products" : "من منتجاتك"}
-          </p>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            {language === "en" ? "Orders" : "الطلبات"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{sellerOrders.length}</div>
-          <p className="text-xs text-muted-foreground">
-            {language === "en" ? "Total orders" : "إجمالي الطلبات"}
-          </p>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            {language === "en" ? "Pending Approval" : "بانتظار الموافقة"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{pendingApproval}</div>
-          <p className="text-xs text-muted-foreground">
-            {language === "en" ? "Requires your action" : "تتطلب إجراء منك"}
-          </p>
-        </CardContent>
-      </Card>
-      
-      {/* Orders awaiting approval */}
-      <Card className="col-span-full">
         <CardHeader>
-          <CardTitle>{language === "en" ? "Orders Awaiting Approval" : "الطلبات في انتظار الموافقة"}</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>
+              {language === "en" ? "Products Management" : "إدارة المنتجات"}
+            </CardTitle>
+            <Button onClick={() => navigate("/seller/products")}>
+              {language === "en" ? "Manage Products" : "إدارة المنتجات"}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          {pendingApproval === 0 ? (
-            <div className="py-8 text-center text-muted-foreground">
-              {language === "en" ? "No orders awaiting approval" : "لا توجد طلبات في انتظار الموافقة"}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button 
+              variant="default" 
+              className="h-auto p-6 flex flex-col items-center justify-center" 
+              onClick={() => navigate("/add-product")}
+            >
+              <span className="text-xl mb-2">+</span>
+              <span>{language === "en" ? "Add New Product" : "إضافة منتج جديد"}</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-auto p-6 flex flex-col items-center justify-center"
+              onClick={() => navigate("/seller/products")}
+            >
+              <span className="text-xl mb-2">📋</span>
+              <span>{language === "en" ? "View My Products" : "عرض منتجاتي"}</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {language === "en" ? "Orders Pending Approval" : "طلبات في انتظار الموافقة"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {pendingOrders.length === 0 ? (
+            <p className="text-center text-muted-foreground py-6">
+              {language === "en"
+                ? "No orders pending approval"
+                : "لا توجد طلبات في انتظار الموافقة"}
+            </p>
           ) : (
             <div className="space-y-4">
-              {sellerOrders
-                .filter(o => o.status === 'pending_approval')
-                .map(order => (
-                  <div key={order.id} className="border rounded-md p-4">
-                    <div className="flex justify-between">
+              {pendingOrders.map((order) => (
+                <Card key={order.id}>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                       <div>
-                        <h3 className="font-medium">Order #{order.id}</h3>
+                        <h3 className="font-semibold">{order.id}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(order.createdAt).toLocaleDateString()}
+                          {language === "en" ? "Customer" : "العميل"}: {order.customer.name}
                         </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">${order.total.toFixed(2)}</p>
                         <p className="text-sm">
-                          {order.deliveryMethod === 'pickup' ? 
-                            (language === "en" ? "Pickup" : "استلام") : 
-                            (language === "en" ? "Delivery" : "توصيل")}
+                          {language === "en" ? "Total" : "المجموع"}: ${order.total.toFixed(2)}
                         </p>
+                        <p className="text-sm">
+                          {language === "en" ? "Delivery" : "التوصيل"}:
+                          {order.deliveryMethod === "pickup"
+                            ? language === "en"
+                              ? " Pickup"
+                              : " استلام"
+                            : language === "en"
+                            ? " Shipping"
+                            : " شحن"}
+                        </p>
+                        <div className="mt-2">
+                          <p className="text-sm font-semibold mb-1">
+                            {language === "en" ? "Products:" : "المنتجات:"}
+                          </p>
+                          {order.products.map((product) => (
+                            <div key={product.id} className="text-xs">
+                              {product.name} x {product.quantity}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 self-end md:self-center">
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => handleReject(order)}
+                        >
+                          {language === "en" ? "Reject" : "رفض"}
+                        </Button>
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => handleApprove(order)}
+                        >
+                          {language === "en" ? "Approve" : "موافقة"}
+                        </Button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
-        </CardContent>
-      </Card>
-      
-      {/* Sales Overview */}
-      <Card className="col-span-full">
-        <CardHeader>
-          <CardTitle>{language === "en" ? "Sales Overview" : "نظرة عامة على المبيعات"}</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[300px]">
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-            Chart visualization coming soon
-          </div>
         </CardContent>
       </Card>
     </div>

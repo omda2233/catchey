@@ -1,103 +1,115 @@
 
-import { useMemo } from 'react';
-import { Order } from '@/models/Order';
+import { useState, useEffect } from 'react';
+import { Order, OrderStatus } from '@/models/Order';
 
-interface OrdersAnalytics {
-  totalOrders: number;
-  totalRevenue: number;
-  pendingApproval: number;
-  inProgress: number;
-  completed: number;
-  pendingPayment: number;
-  shippingOrders: number;
-  pickupOrders: number;
-  cancelledOrders: number;
-  topSellingProducts: { name: string; quantity: number; revenue: number }[];
-  revenueByDate: { date: string; value: number }[];
-  statusBreakdown: { status: string; count: number }[];
+export interface OrderStatusCount {
+  status: OrderStatus;
+  count: number;
+}
+
+export interface DailyOrder {
+  date: string;
+  count: number;
+  amount: number;
+}
+
+export interface CategorySales {
+  category: string;
+  sales: number;
+  percentage: number;
+}
+
+export interface OrdersAnalytics {
+  orderStatusCounts: OrderStatusCount[];
+  ordersByDay: DailyOrder[];
+  totalSalesAmount: number;
+  averageOrderValue: number;
+  topSellingCategories: CategorySales[];
 }
 
 export function useOrderAnalytics(orders: Order[]): OrdersAnalytics {
-  return useMemo(() => {
-    // Calculate total revenue
-    const totalRevenue = orders.reduce((sum, order) => sum + order.paidAmount, 0);
-    
-    // Count orders by status
-    const pendingApproval = orders.filter(o => o.status === 'pending_approval').length;
-    const inProgress = orders.filter(o => ['approved', 'paid_deposit', 'paid_full', 'processing', 'shipped'].includes(o.status)).length;
-    const completed = orders.filter(o => o.status === 'delivered' || o.status === 'completed').length;
-    const pendingPayment = orders.filter(o => 
-      (o.status === 'approved' || o.status === 'paid_deposit') && o.remainingAmount > 0
-    ).length;
-    const cancelledOrders = orders.filter(o => o.status === 'rejected' || o.status === 'cancelled').length;
+  const [analytics, setAnalytics] = useState<OrdersAnalytics>({
+    orderStatusCounts: [],
+    ordersByDay: [],
+    totalSalesAmount: 0,
+    averageOrderValue: 0,
+    topSellingCategories: []
+  });
 
-    // Count by delivery method
-    const shippingOrders = orders.filter(o => o.deliveryMethod === 'shipping').length;
-    const pickupOrders = orders.filter(o => o.deliveryMethod === 'pickup').length;
+  useEffect(() => {
+    // Status counts
+    const statusCounts: Record<string, number> = {};
+    orders.forEach(order => {
+      statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
+    });
     
-    // Get top selling products
-    const productSales: Record<string, { name: string; quantity: number; revenue: number }> = {};
+    const orderStatusCounts: OrderStatusCount[] = Object.keys(statusCounts).map(status => ({
+      status: status as OrderStatus,
+      count: statusCounts[status]
+    }));
+
+    // Orders by day
+    const ordersByDayMap = new Map<string, { count: number; amount: number }>();
+    const today = new Date();
     
+    // Initialize last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      ordersByDayMap.set(dateStr, { count: 0, amount: 0 });
+    }
+    
+    // Populate with actual data
+    orders.forEach(order => {
+      const dateStr = new Date(order.createdAt).toISOString().split('T')[0];
+      if (ordersByDayMap.has(dateStr)) {
+        const current = ordersByDayMap.get(dateStr)!;
+        ordersByDayMap.set(dateStr, {
+          count: current.count + 1,
+          amount: current.amount + order.total
+        });
+      }
+    });
+    
+    const ordersByDay: DailyOrder[] = Array.from(ordersByDayMap.entries()).map(([date, data]) => ({
+      date,
+      count: data.count,
+      amount: data.amount
+    }));
+
+    // Total sales and average order value
+    const totalSalesAmount = orders.reduce((sum, order) => sum + order.paidAmount, 0);
+    const averageOrderValue = orders.length > 0 ? totalSalesAmount / orders.length : 0;
+
+    // Top selling categories
+    const categorySales: Record<string, number> = {};
     orders.forEach(order => {
       order.products.forEach(product => {
-        if (!productSales[product.id]) {
-          productSales[product.id] = {
-            name: product.name,
-            quantity: 0,
-            revenue: 0
-          };
-        }
-        productSales[product.id].quantity += product.quantity;
-        productSales[product.id].revenue += product.price * product.quantity;
+        // Use a default category if none exists
+        const category = 'category' in product ? product.category : 'other';
+        categorySales[category] = (categorySales[category] || 0) + (product.price * product.quantity);
       });
     });
-    
-    const topSellingProducts = Object.values(productSales)
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5);
-    
-    // Calculate revenue by date
-    const revByDate: Record<string, number> = {};
-    
-    orders.forEach(order => {
-      const date = order.createdAt.toISOString().split('T')[0];
-      if (!revByDate[date]) {
-        revByDate[date] = 0;
-      }
-      revByDate[date] += order.paidAmount;
-    });
-    
-    const revenueByDate = Object.entries(revByDate)
-      .map(([date, value]) => ({ date, value }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    // Status breakdown
-    const statusCounts: Record<string, number> = {};
-    
-    orders.forEach(order => {
-      if (!statusCounts[order.status]) {
-        statusCounts[order.status] = 0;
-      }
-      statusCounts[order.status]++;
-    });
-    
-    const statusBreakdown = Object.entries(statusCounts)
-      .map(([status, count]) => ({ status, count }))
-      .sort((a, b) => b.count - a.count);
 
-    return {
-      totalOrders: orders.length,
-      totalRevenue,
-      pendingApproval,
-      inProgress,
-      completed,
-      pendingPayment,
-      shippingOrders,
-      pickupOrders,
-      cancelledOrders,
-      topSellingProducts,
-      revenueByDate,
-      statusBreakdown
-    };
+    const totalSales = Object.values(categorySales).reduce((sum, amount) => sum + amount, 0);
+    const topSellingCategories: CategorySales[] = Object.entries(categorySales)
+      .map(([category, sales]) => ({
+        category,
+        sales,
+        percentage: totalSales > 0 ? (sales / totalSales) * 100 : 0
+      }))
+      .sort((a, b) => b.sales - a.sales)
+      .slice(0, 5);
+
+    setAnalytics({
+      orderStatusCounts,
+      ordersByDay,
+      totalSalesAmount,
+      averageOrderValue,
+      topSellingCategories
+    });
   }, [orders]);
+
+  return analytics;
 }

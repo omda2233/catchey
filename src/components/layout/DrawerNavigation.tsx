@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
@@ -136,6 +136,44 @@ export default function DrawerNavigation() {
     closeDrawer();
   };
 
+  const renderDrawerContent = (closeDrawer: () => void): ReactNode => {
+    return (
+      <div className="grid gap-1 px-2">
+        {menuItems.map((item) => (
+          <DrawerClose asChild key={item.path}>
+            <Button
+              variant={location.pathname === item.path ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => handleNavigation(item.path, closeDrawer)}
+            >
+              {item.icon}
+              <span className="ml-2">{item.name}</span>
+              {item.badge && (
+                <Badge variant="secondary" className="ml-auto">
+                  {item.badge}
+                </Badge>
+              )}
+            </Button>
+          </DrawerClose>
+        ))}
+        {user && (
+          <DrawerClose asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-destructive"
+              onClick={() => handleLogout(closeDrawer)}
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="ml-2">
+                {language === 'en' ? 'Logout' : 'تسجيل خروج'}
+              </span>
+            </Button>
+          </DrawerClose>
+        )}
+      </div>
+    );
+  };
+
   return (
     <Drawer>
       <DrawerTrigger asChild>
@@ -166,41 +204,7 @@ export default function DrawerNavigation() {
           </DrawerTitle>
         </DrawerHeader>
         <div className="py-4">
-          {(closeDrawer: () => void) => (
-            <div className="grid gap-1 px-2">
-              {menuItems.map((item) => (
-                <DrawerClose asChild key={item.path}>
-                  <Button
-                    variant={location.pathname === item.path ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => handleNavigation(item.path, closeDrawer)}
-                  >
-                    {item.icon}
-                    <span className="ml-2">{item.name}</span>
-                    {item.badge && (
-                      <Badge variant="secondary" className="ml-auto">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </Button>
-                </DrawerClose>
-              ))}
-              {user && (
-                <DrawerClose asChild>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-destructive"
-                    onClick={() => handleLogout(closeDrawer)}
-                  >
-                    <LogOut className="h-5 w-5" />
-                    <span className="ml-2">
-                      {language === 'en' ? 'Logout' : 'تسجيل خروج'}
-                    </span>
-                  </Button>
-                </DrawerClose>
-              )}
-            </div>
-          )}
+          {renderDrawerContent}
         </div>
       </DrawerContent>
     </Drawer>

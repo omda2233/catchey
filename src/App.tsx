@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { OrderProvider } from "@/contexts/OrderContext";
 import { useState, useEffect } from "react";
 
 import Index from "./pages/Index";
@@ -21,6 +22,8 @@ import CheckoutPage from "./pages/CheckoutPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import ShippingOrdersPage from "./pages/ShippingOrdersPage";
 import SellerProductsPage from "./pages/SellerProductsPage";
+import OrdersPage from "./pages/OrdersPage";
+import PaymentPage from "./pages/PaymentPage";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +61,8 @@ const AppContent = () => {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/payment/:orderId" element={<PaymentPage />} />
         <Route path="/admin/users" element={<AdminUsersPage />} />
         <Route path="/shipping/orders" element={<ShippingOrdersPage />} />
         <Route path="/seller/products" element={<SellerProductsPage />} />
@@ -73,13 +78,15 @@ const App = () => {
       <LanguageProvider>
         <AuthProvider>
           <CartProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <AppContent />
-              </BrowserRouter>
-            </TooltipProvider>
+            <OrderProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <AppContent />
+                </BrowserRouter>
+              </TooltipProvider>
+            </OrderProvider>
           </CartProvider>
         </AuthProvider>
       </LanguageProvider>

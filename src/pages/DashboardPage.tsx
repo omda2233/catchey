@@ -1,8 +1,8 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrders } from '@/contexts/OrderContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { Order, OrderStatus } from '@/models/Order';
 
 // Mock data structure for orders
 interface Order {
@@ -54,7 +55,7 @@ interface Order {
   }[];
   total: number;
   deliveryMethod: 'pickup' | 'shipping';
-  status: 'pending_approval' | 'approved' | 'rejected' | 'paid_deposit' | 'paid_full' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: OrderStatus;
   shippingCompanyId?: string;
   createdAt: Date;
 }

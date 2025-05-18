@@ -26,12 +26,12 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useLanguage } from "@/contexts/LanguageContext";
-import Logo from "../Logo";
+import { Logo } from "@/components/Logo";
 
 export default function DrawerNavigation() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const { language } = useLanguage();
   const { totalItems } = useCart();
 
@@ -131,7 +131,7 @@ export default function DrawerNavigation() {
   };
 
   const handleLogout = (closeDrawer: () => void) => {
-    logout();
+    signOut();
     navigate('/auth/signin');
     closeDrawer();
   };
@@ -166,7 +166,7 @@ export default function DrawerNavigation() {
           </DrawerTitle>
         </DrawerHeader>
         <div className="py-4">
-          {(closeDrawer) => (
+          {(closeDrawer: () => void) => (
             <div className="grid gap-1 px-2">
               {menuItems.map((item) => (
                 <DrawerClose asChild key={item.path}>

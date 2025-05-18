@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, BarChart } from "@/components/ui/chart";
 import { useOrders } from "@/contexts/OrderContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useOrderAnalytics } from "@/hooks/use-order-analytics";
@@ -65,7 +64,7 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
       
-      {/* Charts - Sales Over Time */}
+      {/* Charts - Sales Overview */}
       <Card className="col-span-full">
         <CardHeader>
           <CardTitle>{language === "en" ? "Sales Overview" : "نظرة عامة على المبيعات"}</CardTitle>
@@ -74,14 +73,9 @@ export default function AdminDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[300px]">
-          <LineChart 
-            data={ordersByDay}
-            categories={['totalAmount']}
-            index="date"
-            colors={['#6366F1']}
-            valueFormatter={(value) => `$${value}`}
-            className="h-[300px]"
-          />
+          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+            Chart visualization coming soon
+          </div>
         </CardContent>
       </Card>
       
@@ -94,13 +88,9 @@ export default function AdminDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[300px]">
-          <BarChart
-            data={orderStatusCounts}
-            index="status"
-            categories={['count']}
-            colors={['#6366F1']}
-            className="h-[300px]"
-          />
+          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+            Chart visualization coming soon
+          </div>
         </CardContent>
       </Card>
       
@@ -113,14 +103,9 @@ export default function AdminDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[300px]">
-          <BarChart
-            data={topSellingCategories}
-            index="category"
-            categories={['sales']}
-            colors={['#10B981']}
-            valueFormatter={(value) => `$${value}`}
-            className="h-[300px]"
-          />
+          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+            Chart visualization coming soon
+          </div>
         </CardContent>
       </Card>
     </div>

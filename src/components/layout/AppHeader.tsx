@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Logo from '../Logo';
+import { Logo } from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import DrawerNavigation from './DrawerNavigation';
@@ -9,7 +9,7 @@ import NotificationDrawer from '../notifications/NotificationDrawer';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import LanguageSwitcher from '../LanguageSwitcher';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function AppHeader() {

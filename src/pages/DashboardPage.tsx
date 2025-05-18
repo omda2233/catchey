@@ -38,120 +38,32 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { Order, OrderStatus } from '@/models/Order';
 
-// Mock data structure for orders
-interface Order {
-  id: string;
-  customer: {
-    id: string;
-    name: string;
-  };
-  sellerId: string;
-  sellerName: string;
-  products: {
-    id: string;
-    name: string;
-    price: number;
-    quantity: number;
-  }[];
-  total: number;
-  deliveryMethod: 'pickup' | 'shipping';
-  status: OrderStatus;
-  shippingCompanyId?: string;
-  createdAt: Date;
-}
+// Removed the duplicate Order interface definition that was causing the conflict
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { getUserOrders, getSellerOrders, getShippingOrders, getAllOrders, updateOrderStatus } = useOrders();
 
-  // Mock orders data - in a real app, this would come from an API
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: 'ORD-001',
-      customer: { id: '3', name: 'Buyer User' },
-      sellerId: '2',
-      sellerName: 'Seller User',
-      products: [
-        { id: 'P1', name: 'Blue Cotton Fabric', price: 24.99, quantity: 2 },
-        { id: 'P2', name: 'Sewing Kit', price: 79.99, quantity: 1 }
-      ],
-      total: 129.97,
-      deliveryMethod: 'pickup',
-      status: 'pending_approval',
-      createdAt: new Date('2023-05-15')
-    },
-    {
-      id: 'ORD-002',
-      customer: { id: '3', name: 'Buyer User' },
-      sellerId: '2',
-      sellerName: 'Seller User',
-      products: [
-        { id: 'P3', name: 'Silk Fabric', price: 29.99, quantity: 3 }
-      ],
-      total: 89.97,
-      deliveryMethod: 'shipping',
-      status: 'approved',
-      shippingCompanyId: '4',
-      createdAt: new Date('2023-05-16')
-    },
-    {
-      id: 'ORD-003',
-      customer: { id: '5', name: 'John User' },
-      sellerId: '6',
-      sellerName: 'Sarah Seller',
-      products: [
-        { id: 'P4', name: 'Professional Scissors', price: 59.99, quantity: 1 },
-        { id: 'P5', name: 'Wool Yarn Set', price: 49.99, quantity: 2 }
-      ],
-      total: 159.97,
-      deliveryMethod: 'shipping',
-      status: 'paid_full',
-      shippingCompanyId: '4',
-      createdAt: new Date('2023-05-17')
-    },
-    {
-      id: 'ORD-004',
-      customer: { id: '5', name: 'John User' },
-      sellerId: '6',
-      sellerName: 'Sarah Seller',
-      products: [
-        { id: 'P6', name: 'Leather Thread', price: 24.99, quantity: 1 },
-        { id: 'P7', name: 'Measuring Tape Set', price: 19.99, quantity: 1 }
-      ],
-      total: 44.98,
-      deliveryMethod: 'pickup',
-      status: 'paid_deposit',
-      createdAt: new Date('2023-05-18')
-    },
-  ]);
-
-  // Filter orders based on user role
-  const filteredOrders = orders.filter(order => {
-    if (!user) return false;
+  // Get orders based on user role
+  const getOrdersByRole = () => {
+    if (!user) return [];
     
-    if (user.role === 'admin') {
-      // Admin sees all orders
-      return true;
-    } else if (user.role === 'seller') {
-      // Seller only sees orders for their products
-      return order.sellerId === user.id;
-    } else if (user.role === 'shipping') {
-      // Shipping company only sees orders assigned to them that require shipping
-      return order.shippingCompanyId === user.id && 
-             order.deliveryMethod === 'shipping' &&
-             (order.status === 'paid_full' || 
-              order.status === 'processing' || 
-              order.status === 'shipped' || 
-              order.status === 'delivered');
-    } else if (user.role === 'user') {
-      // Users only see their own orders
-      return order.customer.id === user.id;
+    switch (user.role) {
+      case 'admin':
+        return getAllOrders();
+      case 'seller':
+        return getSellerOrders();
+      case 'shipping':
+        return getShippingOrders();
+      default:
+        return getUserOrders();
     }
-    
-    return false;
-  });
+  };
+
+  const filteredOrders = getOrdersByRole();
   
   // Redirect if not logged in
   if (!user) {
@@ -159,20 +71,11 @@ export default function DashboardPage() {
     return null;
   }
   
-  const handleUpdateOrderStatus = (orderId: string, status: Order['status']) => {
-    setOrders(orders.map(order => 
-      order.id === orderId ? { ...order, status } : order
-    ));
-    
-    toast({
-      title: language === 'en' ? 'Order Status Updated' : 'تم تحديث حالة الطلب',
-      description: language === 'en' 
-        ? `Order ${orderId} has been updated to ${getStatusDisplayName(status)}` 
-        : `تم تحديث الطلب ${orderId} إلى ${getStatusDisplayName(status)}`,
-    });
+  const handleUpdateOrderStatus = (orderId: string, status: OrderStatus) => {
+    updateOrderStatus(orderId, status);
   };
   
-  const getStatusDisplayName = (status: Order['status']) => {
+  const getStatusDisplayName = (status: OrderStatus) => {
     switch (status) {
       case 'pending_approval': return language === 'en' ? 'Pending Approval' : 'في انتظار الموافقة';
       case 'approved': return language === 'en' ? 'Approved' : 'تمت الموافقة';
@@ -187,7 +90,7 @@ export default function DashboardPage() {
     }
   };
   
-  const getStatusBadge = (status: Order['status']) => {
+  const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
       case 'pending_approval':
         return <Badge variant="secondary" className="bg-amber-500/20 text-amber-300">
@@ -316,7 +219,7 @@ export default function DashboardPage() {
           <StatCard
             icon={<Package className="h-6 w-6" />}
             title={language === 'en' ? 'Orders' : 'الطلبات'}
-            value={orders.length.toString()}
+            value={filteredOrders.length.toString()}
             change="+5"
             positive={true}
             bgClass="from-gold/10 to-gold/5"

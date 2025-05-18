@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { CartProvider } from "@/contexts/CartContext";
+import { CartProvider } from "@/contexts/CartProvider";
 import { OrderProvider } from "@/contexts/OrderContext";
 import { useState, useEffect } from "react";
 
@@ -22,6 +22,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import ShippingOrdersPage from "./pages/ShippingOrdersPage";
 import SellerProductsPage from "./pages/SellerProductsPage";
+import AddProductPage from "./pages/AddProductPage";
 import OrdersPage from "./pages/OrdersPage";
 import PaymentPage from "./pages/PaymentPage";
 
@@ -66,6 +67,7 @@ const AppContent = () => {
         <Route path="/admin/users" element={<AdminUsersPage />} />
         <Route path="/shipping/orders" element={<ShippingOrdersPage />} />
         <Route path="/seller/products" element={<SellerProductsPage />} />
+        <Route path="/add-product" element={<AddProductPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

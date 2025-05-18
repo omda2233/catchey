@@ -1,5 +1,5 @@
 
-import { Order } from '@/models/Order';
+import { Order, OrderStatus } from '@/models/Order';
 import { User } from '@/contexts/AuthContext';
 
 export const useOrderPayment = (
@@ -51,22 +51,22 @@ export const useOrderPayment = (
     // - If approved: must pay full amount
 
     let amountToPay = 0;
-    let newStatus = order.status;
+    let newStatus: OrderStatus = order.status;
     
     if (order.deliveryMethod === 'pickup') {
       if (order.status === 'approved' && order.paidAmount === 0) {
         // Paying for approved pickup order
         amountToPay = payFull ? order.total : (order.depositAmount || 0);
-        newStatus = payFull ? 'paid_full' : 'paid_deposit';
+        newStatus = payFull ? 'paid_full' as OrderStatus : 'paid_deposit';
       } else if (order.status === 'paid_deposit') {
         // Paying remaining balance after deposit
         amountToPay = order.remainingAmount;
-        newStatus = 'paid_full';
+        newStatus = 'paid_full' as OrderStatus;
       }
     } else if (order.deliveryMethod === 'shipping' && order.status === 'approved') {
       // Shipping orders must be paid in full
       amountToPay = order.total;
-      newStatus = 'paid_full';
+      newStatus = 'paid_full' as OrderStatus;
     }
 
     if (amountToPay <= 0) {
@@ -99,7 +99,7 @@ export const useOrderPayment = (
       if (newStatus === 'paid_full') {
         setTimeout(() => {
           setOrders(orders.map(o => 
-            o.id === order.id ? { ...o, status: 'processing', updatedAt: new Date() } : o
+            o.id === order.id ? { ...o, status: 'processing' as OrderStatus, updatedAt: new Date() } : o
           ));
         }, 2000);
       }

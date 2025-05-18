@@ -87,8 +87,12 @@ export function useOrderAnalytics(orders: Order[]): OrdersAnalytics {
     orders.forEach(order => {
       order.products.forEach(product => {
         // Use a default category if none exists
-        const category = 'category' in product ? product.category : 'other';
-        categorySales[category] = (categorySales[category] || 0) + (product.price * product.quantity);
+        const category = typeof product === 'object' && 'category' in product 
+          ? (product.category as string || 'other')
+          : 'other';
+        
+        categorySales[category] = (categorySales[category] || 0) + 
+          (product.price * product.quantity);
       });
     });
 

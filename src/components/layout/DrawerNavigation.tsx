@@ -165,42 +165,42 @@ export default function DrawerNavigation() {
             <Logo showText={true} />
           </DrawerTitle>
         </DrawerHeader>
-        <div className="py-4">
-          {({ close }: { close: () => void }) => (
-            <div className="grid gap-1 px-2">
-              {menuItems.map((item) => (
-                <DrawerClose asChild key={item.path}>
-                  <Button
-                    variant={location.pathname === item.path ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => handleNavigation(item.path, close)}
-                  >
-                    {item.icon}
-                    <span className="ml-2">{item.name}</span>
-                    {item.badge && (
-                      <Badge variant="secondary" className="ml-auto">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </Button>
-                </DrawerClose>
-              ))}
-              {user && (
-                <DrawerClose asChild>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-destructive"
-                    onClick={() => handleLogout(close)}
-                  >
-                    <LogOut className="h-5 w-5" />
-                    <span className="ml-2">
-                      {language === 'en' ? 'Logout' : 'تسجيل خروج'}
-                    </span>
-                  </Button>
-                </DrawerClose>
-              )}
-            </div>
-          )}
+        
+        <div className="py-4 px-2">
+          {/* Fixed: Removed the function component that was causing the type error */}
+          <div className="grid gap-1">
+            {menuItems.map((item) => (
+              <DrawerClose asChild key={item.path}>
+                <Button
+                  variant={location.pathname === item.path ? "default" : "ghost"}
+                  className="w-full justify-start"
+                  onClick={() => handleNavigation(item.path, () => {})}
+                >
+                  {item.icon}
+                  <span className="ml-2">{item.name}</span>
+                  {item.badge && (
+                    <Badge variant="secondary" className="ml-auto">
+                      {item.badge}
+                    </Badge>
+                  )}
+                </Button>
+              </DrawerClose>
+            ))}
+            {user && (
+              <DrawerClose asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-destructive"
+                  onClick={() => handleLogout(() => {})}
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="ml-2">
+                    {language === 'en' ? 'Logout' : 'تسجيل خروج'}
+                  </span>
+                </Button>
+              </DrawerClose>
+            )}
+          </div>
         </div>
       </DrawerContent>
     </Drawer>

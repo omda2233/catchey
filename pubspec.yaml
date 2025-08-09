@@ -1,0 +1,95 @@
+name: catchy
+description: A bilingual marketplace for fabrics and accessories.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
+  # Firebase
+  firebase_core: ^2.15.1
+  firebase_auth: ^4.7.2
+  cloud_firestore: ^4.8.4
+  firebase_storage: ^11.2.5
+  
+  # State Management
+  provider: ^6.0.5
+  
+  # UI
+  google_fonts: ^6.1.0
+  cached_network_image: ^3.3.0
+  flutter_svg: ^2.0.7
+  shimmer: ^3.0.0
+  carousel_slider: ^4.2.1
+  photo_view: ^0.14.0
+  
+  # Utils
+  intl: ^0.18.0
+  shared_preferences: ^2.2.2
+  url_launcher: ^6.1.14
+  image_picker: ^1.0.4
+  path_provider: ^2.1.1
+  uuid: ^4.1.0
+  
+  # Progress indicators
+  modal_progress_hud_nsn: ^0.3.0
+  loading_animation_widget: ^1.2.0+4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.2
+
+flutter:
+  uses-material-design: true
+  generate: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+    
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo/Cairo-Regular.ttf
+        - asset: assets/fonts/Cairo/Cairo-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Cairo/Cairo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Cairo/Cairo-Bold.ttf
+          weight: 700
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto/Roboto-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Roboto/Roboto-Bold.ttf
+          weight: 700
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/images/splash_logo.png
+  branding: assets/images/splash_branding.png
+  color_dark: "#121212"
+  image_dark: assets/images/splash_logo_dark.png
+  branding_dark: assets/images/splash_branding_dark.png
+
+  android_12:
+    image: assets/images/splash_logo.png
+    icon_background_color: "#FFFFFF"
+    image_dark: assets/images/splash_logo_dark.png
+    icon_background_color_dark: "#121212" 

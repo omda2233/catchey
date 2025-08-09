@@ -1,6 +1,14 @@
-
 import { Order, OrderStatus } from '@/models/Order';
 import { User } from '@/contexts/AuthContext';
+
+type PaymentMethodType = 'instapay' | 'vodafone-cash' | 'visa';
+interface VisaData {
+  cardNumber: string;
+  expiryMonth: string;
+  expiryYear: string;
+  cvv: string;
+  cardHolderName: string;
+}
 
 export const useOrderPayment = (
   orders: Order[],
@@ -10,7 +18,12 @@ export const useOrderPayment = (
   language: string
 ) => {
   // Process payment for an order
-  const processPayment = async (order: Order, payFull: boolean): Promise<boolean> => {
+  const processPayment = async (
+    order: Order,
+    payFull: boolean,
+    paymentMethod: PaymentMethodType,
+    visaData?: VisaData
+  ): Promise<boolean> => {
     if (!user) {
       toast({
         title: language === 'en' ? 'Error' : 'خطأ',
@@ -30,9 +43,7 @@ export const useOrderPayment = (
     }
 
     // Check if order is in a valid state for payment
-    if (order.status !== 'pending_approval' && 
-        order.status !== 'approved' && 
-        order.status !== 'paid_deposit') {
+    if (order.status !== 'seller_approved' && order.status !== 'paid_partial') {
       toast({
         title: language === 'en' ? 'Invalid Order Status' : 'حالة الطلب غير صالحة',
         description: language === 'en' 
@@ -43,30 +54,24 @@ export const useOrderPayment = (
       return false;
     }
 
-    // For pickup orders:
-    // - If approved and no payment yet: can pay deposit or full
-    // - If already paid deposit: can only pay remaining (full - deposit)
-    
-    // For shipping orders:
-    // - If approved: must pay full amount
-
     let amountToPay = 0;
     let newStatus: OrderStatus = order.status;
-    
-    if (order.deliveryMethod === 'pickup') {
-      if (order.status === 'approved' && order.paidAmount === 0) {
-        // Paying for approved pickup order
-        amountToPay = payFull ? order.total : (order.depositAmount || 0);
-        newStatus = payFull ? 'paid_full' as OrderStatus : 'paid_deposit';
-      } else if (order.status === 'paid_deposit') {
-        // Paying remaining balance after deposit
+
+    if (order.products.some(p => p.isReserved)) {
+      // Reservation: allow partial payment (deposit)
+      if (order.status === 'seller_approved' && order.paidAmount === 0) {
+        amountToPay = payFull ? order.total : (order.depositAmount || order.total * 0.5);
+        newStatus = payFull ? 'paid_full' : 'paid_partial';
+      } else if (order.status === 'paid_partial') {
         amountToPay = order.remainingAmount;
-        newStatus = 'paid_full' as OrderStatus;
+        newStatus = 'paid_full';
       }
-    } else if (order.deliveryMethod === 'shipping' && order.status === 'approved') {
-      // Shipping orders must be paid in full
-      amountToPay = order.total;
-      newStatus = 'paid_full' as OrderStatus;
+    } else {
+      // Non-reservation: must pay full
+      if (order.status === 'seller_approved') {
+        amountToPay = order.total;
+        newStatus = 'paid_full';
+      }
     }
 
     if (amountToPay <= 0) {
@@ -78,28 +83,37 @@ export const useOrderPayment = (
       return false;
     }
 
-    // Simulate payment processing
-    // In a real app, this would integrate with a payment gateway
     setTimeout(() => {
-      // Update order with new payment info
       setOrders(orders.map(o => {
         if (o.id !== order.id) return o;
-        
         const newPaidAmount = o.paidAmount + amountToPay;
         return {
           ...o,
           paidAmount: newPaidAmount,
           remainingAmount: o.total - newPaidAmount,
           status: newStatus,
+          paymentMethod,
+          paymentTransactions: [
+            ...(o.paymentTransactions || []),
+            {
+              id: `PAY-${Date.now()}`,
+              orderId: o.id,
+              amount: amountToPay,
+              currency: 'USD',
+              paymentMethod,
+              status: 'completed',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              metadata: paymentMethod === 'visa' ? visaData : undefined
+            }
+          ],
           updatedAt: new Date()
         };
       }));
-
-      // Move order to processing if fully paid
       if (newStatus === 'paid_full') {
         setTimeout(() => {
-          setOrders(orders.map(o => 
-            o.id === order.id ? { ...o, status: 'processing' as OrderStatus, updatedAt: new Date() } : o
+          setOrders(orders.map(o =>
+            o.id === order.id ? { ...o, status: 'processing', updatedAt: new Date() } : o
           ));
         }, 2000);
       }
@@ -107,8 +121,8 @@ export const useOrderPayment = (
 
     toast({
       title: language === 'en' ? 'Payment Successful' : 'تم الدفع بنجاح',
-      description: language === 'en' 
-        ? `Your payment of $${amountToPay.toFixed(2)} has been processed` 
+      description: language === 'en'
+        ? `Your payment of $${amountToPay.toFixed(2)} has been processed`
         : `تمت معالجة دفعتك بقيمة $${amountToPay.toFixed(2)}`,
       variant: 'default',
     });

@@ -1,0 +1,23 @@
+{
+  "appId": "com.catchy.fabricmarket",
+  "appName": "catchy-fabric-market",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#ffffffff",
+      "androidSplashResourceName": "splash",
+      "androidSplashImageUrl": ""
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#ffffffff",
+      "translucent": false,
+      "overlaysWebView": false
+    }
+  }
+}

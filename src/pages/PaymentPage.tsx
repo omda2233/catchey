@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -15,6 +14,8 @@ import {
 } from '@/components/ui/table';
 import { DollarSign, CreditCard, ArrowLeft, User, Package, MapPin } from 'lucide-react';
 import { Order } from '@/models/Order';
+import { TEST_VISA_CARDS } from '@/models/payment';
+import { ALLOWED_TEST_VISA_CARDS } from '@/config/testCards';
 
 export default function PaymentPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -25,6 +26,14 @@ export default function PaymentPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentOption, setPaymentOption] = useState<'deposit' | 'full'>('full');
+  const [paymentMethod, setPaymentMethod] = useState<'instapay' | 'vodafone-cash' | 'visa'>('instapay');
+  const [visaData, setVisaData] = useState({
+    cardNumber: '',
+    expiryMonth: '',
+    expiryYear: '',
+    cvv: '',
+    cardHolderName: ''
+  });
 
   // Load order data
   useEffect(() => {
@@ -50,7 +59,7 @@ export default function PaymentPage() {
     }
     
     // Check if the order is in a payable state
-    if (foundOrder.status !== 'approved' && foundOrder.status !== 'paid_deposit') {
+    if (foundOrder.status !== 'seller_approved' && foundOrder.status !== 'paid_partial') {
       navigate('/orders');
       return;
     }
@@ -58,7 +67,7 @@ export default function PaymentPage() {
     setOrder(foundOrder);
     
     // If already paid deposit, only full payment is available
-    if (foundOrder.status === 'paid_deposit') {
+    if (foundOrder.status === 'paid_partial') {
       setPaymentOption('full');
     }
     // For pickup orders, set default to deposit unless already paid
@@ -73,15 +82,29 @@ export default function PaymentPage() {
 
   const handlePayment = async () => {
     if (!order) return;
-    
     setIsProcessing(true);
-    
+    // DEV-ONLY: Only allow specific test Visa cards
+    if (paymentMethod === 'visa') {
+      // Remove spaces from input for comparison
+      const inputCard = visaData.cardNumber.replace(/\s+/g, '');
+      const allowed = ALLOWED_TEST_VISA_CARDS.some(card =>
+        card.cardNumber === inputCard &&
+        card.expiryMonth === visaData.expiryMonth &&
+        card.expiryYear === visaData.expiryYear
+      );
+      if (!allowed) {
+        setIsProcessing(false);
+        alert('Only supported test cards are allowed during development.');
+        return;
+      }
+    }
     try {
       const success = await processPayment(
-        order, 
-        paymentOption === 'full' || order.deliveryMethod === 'shipping'
+        order,
+        paymentOption === 'full' || order.deliveryMethod === 'shipping',
+        paymentMethod,
+        paymentMethod === 'visa' ? visaData : undefined
       );
-      
       if (success) {
         setTimeout(() => {
           navigate('/orders');
@@ -90,7 +113,6 @@ export default function PaymentPage() {
         setIsProcessing(false);
       }
     } catch (error) {
-      console.error('Payment error:', error);
       setIsProcessing(false);
     }
   };
@@ -98,7 +120,7 @@ export default function PaymentPage() {
   if (!order) return null;
 
   // Calculate payment amounts
-  const isDepositAllowed = order.deliveryMethod === 'pickup' && order.status === 'approved';
+  const isDepositAllowed = order.deliveryMethod === 'pickup' && order.status === 'seller_approved';
   const depositAmount = order.depositAmount || calculateDepositAmount(order.total);
   const remainingAfterDeposit = order.total - depositAmount;
 
@@ -283,6 +305,77 @@ export default function PaymentPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Payment Method Selector */}
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium text-gold/70 mb-2">
+                    {language === 'en' ? 'Payment Method' : 'طريقة الدفع'}
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant={paymentMethod === 'instapay' ? 'default' : 'outline'}
+                      className={paymentMethod === 'instapay' ? 'bg-gold text-navy' : 'border-gold/20 text-gold'}
+                      onClick={() => setPaymentMethod('instapay')}
+                    >
+                      InstaPay
+                    </Button>
+                    <Button
+                      variant={paymentMethod === 'vodafone-cash' ? 'default' : 'outline'}
+                      className={paymentMethod === 'vodafone-cash' ? 'bg-gold text-navy' : 'border-gold/20 text-gold'}
+                      onClick={() => setPaymentMethod('vodafone-cash')}
+                    >
+                      Vodafone Cash
+                    </Button>
+                    <Button
+                      variant={paymentMethod === 'visa' ? 'default' : 'outline'}
+                      className={paymentMethod === 'visa' ? 'bg-gold text-navy' : 'border-gold/20 text-gold'}
+                      onClick={() => setPaymentMethod('visa')}
+                    >
+                      Visa (Test Only)
+                    </Button>
+                  </div>
+                  {paymentMethod === 'visa' && (
+                    <div className="mt-4 space-y-2">
+                      <input
+                        className="w-full p-2 rounded bg-navy-dark border-gold/30 text-gold"
+                        placeholder="Card Number"
+                        value={visaData.cardNumber}
+                        onChange={e => setVisaData({ ...visaData, cardNumber: e.target.value })}
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          className="w-1/2 p-2 rounded bg-navy-dark border-gold/30 text-gold"
+                          placeholder="MM"
+                          value={visaData.expiryMonth}
+                          onChange={e => setVisaData({ ...visaData, expiryMonth: e.target.value })}
+                        />
+                        <input
+                          className="w-1/2 p-2 rounded bg-navy-dark border-gold/30 text-gold"
+                          placeholder="YYYY"
+                          value={visaData.expiryYear}
+                          onChange={e => setVisaData({ ...visaData, expiryYear: e.target.value })}
+                        />
+                      </div>
+                      <input
+                        className="w-full p-2 rounded bg-navy-dark border-gold/30 text-gold"
+                        placeholder="CVV"
+                        value={visaData.cvv}
+                        onChange={e => setVisaData({ ...visaData, cvv: e.target.value })}
+                      />
+                      <input
+                        className="w-full p-2 rounded bg-navy-dark border-gold/30 text-gold"
+                        placeholder="Cardholder Name"
+                        value={visaData.cardHolderName}
+                        onChange={e => setVisaData({ ...visaData, cardHolderName: e.target.value })}
+                      />
+                      <div className="text-xs text-gold/60 mt-2">
+                        Use one of the following test cards:<br />
+                        4111 1111 1111 1111 (12/2025, 123, Test User)<br />
+                        4242 4242 4242 4242 (01/2026, 321, Test Buyer)
+                      </div>
+                    </div>
+                  )}
+                </div>
               </CardContent>
               
               <CardFooter>

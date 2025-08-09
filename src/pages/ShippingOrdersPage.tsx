@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,6 +32,8 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { orderService } from '@/lib/firestore';
+import { Order as FirestoreOrder } from '@/models/firestoreSchemas';
 
 // Define order status type
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
@@ -58,97 +60,28 @@ export default function ShippingOrdersPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Mock orders for the shipping company
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: 'ORD-001',
-      customer: 'John Doe',
-      address: '123 Main St, New York, NY 10001',
-      date: new Date('2023-05-15'),
-      total: 129.99,
-      status: 'pending',
-      items: [
-        {
-          productId: 'P1',
-          productName: 'Blue Cotton Fabric',
-          quantity: 2,
-          price: 24.99
-        },
-        {
-          productId: 'P2',
-          productName: 'Sewing Kit',
-          quantity: 1,
-          price: 79.99
-        }
-      ]
-    },
-    {
-      id: 'ORD-002',
-      customer: 'Jane Smith',
-      address: '456 Oak Ave, Los Angeles, CA 90001',
-      date: new Date('2023-05-16'),
-      total: 89.97,
-      status: 'processing',
-      items: [
-        {
-          productId: 'P3',
-          productName: 'Silk Fabric',
-          quantity: 3,
-          price: 29.99
-        }
-      ]
-    },
-    {
-      id: 'ORD-003',
-      customer: 'Robert Johnson',
-      address: '789 Pine St, Chicago, IL 60007',
-      date: new Date('2023-05-17'),
-      total: 159.99,
-      status: 'shipped',
-      items: [
-        {
-          productId: 'P4',
-          productName: 'Professional Scissors',
-          quantity: 1,
-          price: 59.99
-        },
-        {
-          productId: 'P5',
-          productName: 'Wool Yarn Set',
-          quantity: 2,
-          price: 49.99
-        }
-      ]
-    },
-    {
-      id: 'ORD-004',
-      customer: 'Emily Davis',
-      address: '101 Cedar Dr, Miami, FL 33101',
-      date: new Date('2023-05-18'),
-      total: 74.99,
-      status: 'delivered',
-      items: [
-        {
-          productId: 'P6',
-          productName: 'Leather Thread',
-          quantity: 1,
-          price: 24.99
-        },
-        {
-          productId: 'P7',
-          productName: 'Measuring Tape Set',
-          quantity: 1,
-          price: 19.99
-        },
-        {
-          productId: 'P8',
-          productName: 'Buttons Assortment',
-          quantity: 1,
-          price: 29.99
-        }
-      ]
-    }
-  ]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    orderService.getOrdersBySeller(user.id).then(firestoreOrders => {
+      setOrders(firestoreOrders.map(fOrder => ({
+        id: fOrder.id!,
+        customer: fOrder.buyerName || '',
+        address: fOrder.shippingAddress || '',
+        date: new Date(fOrder.createdAt),
+        total: fOrder.totalAmount,
+        status: fOrder.status as OrderStatus,
+        items: [
+          {
+            productId: fOrder.productId,
+            productName: fOrder.productName || '',
+            quantity: fOrder.quantity,
+            price: fOrder.totalAmount
+          }
+        ]
+      })));
+    });
+  }, [user]);
   
   // Redirect if not logged in or not a shipping company
   if (!user) {

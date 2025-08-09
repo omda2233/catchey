@@ -34,7 +34,8 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Product, ProductCategory, MOCK_PRODUCTS } from "@/models/Product";
+import { Product, ProductCategory } from "@/models/Product";
+import { productService } from '@/lib/firestore';
 
 // Form schema for adding a product
 const formSchema = z.object({
@@ -103,39 +104,29 @@ export default function AddProductPage() {
 
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // In a real app, you would send this to your backend API
-    // For demo purposes, we'll just simulate adding to mock data
-    const newProduct: Product = {
-      id: `prod-${Math.floor(Math.random() * 10000)}`,
+    if (!user) return;
+    const newProduct = {
       name: values.name,
-      nameAr: values.nameAr || undefined,
       description: values.description,
-      descriptionAr: values.descriptionAr || undefined,
+      category: values.category,
       price: values.price,
-      category: values.category as ProductCategory,
-      image: values.image || "https://placehold.co/800x600/1A1F2C/E6B54A?text=Product",
-      images: [values.image || "https://placehold.co/800x600/1A1F2C/E6B54A?text=Product"],
-      rating: 5, // Default rating for new products
-      inStock: values.inStock,
-      sellerId: user.id,
-      sellerName: user.name,
-      reviewCount: 0,
-      currency: "USD",
+      ownerId: user.id,
+      ownerName: user.name,
+      imageUrl: values.image || 'https://placehold.co/800x600/1A1F2C/E6B54A?text=Product',
+      images: values.image ? [values.image] : ['https://placehold.co/800x600/1A1F2C/E6B54A?text=Product'],
+      isAvailable: true,
+      isReserved: false,
       createdAt: new Date(),
+      updatedAt: new Date()
     };
-
-    // Mock adding the product (in a real app, this would be an API call)
-    MOCK_PRODUCTS.push(newProduct);
-
+    await productService.createProduct(newProduct);
     toast({
-      title: language === 'en' ? "Product Added" : "تمت إضافة المنتج",
-      description: language === 'en' 
-        ? `${newProduct.name} has been added to your products.` 
-        : `تمت إضافة ${newProduct.nameAr || newProduct.name} إلى منتجاتك.`,
+      title: language === 'en' ? 'Product Added' : 'تمت إضافة المنتج',
+      description: language === 'en'
+        ? `${values.name} has been added to your products.`
+        : `تمت إضافة ${values.nameAr || values.name} إلى منتجاتك.`,
     });
-
-    // Navigate back to seller products page
-    navigate("/seller/products");
+    navigate('/seller/products');
   };
 
   return (

@@ -17,7 +17,8 @@ const AuthCard = () => {
   const navigate = useNavigate();
   
   const isSignUp = location.pathname.includes('signup');
-  const initialTab = isSignUp ? 'signup' : 'signin';
+  const currentTab = isSignUp ? 'signup' : 'signin';
+  const isOnline = navigator.onLine;
   
   const handleTabChange = (value: string) => {
     navigate(value === 'signup' ? '/auth/signup' : '/auth/signin');
@@ -26,7 +27,7 @@ const AuthCard = () => {
   return (
     <Card className="border-gold/20 bg-navy-light">
       <CardHeader className="pb-2">
-        <Tabs defaultValue={initialTab} onValueChange={handleTabChange} className="w-full">
+        <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid grid-cols-2 bg-navy-dark">
             <TabsTrigger 
               value="signin" 
@@ -44,11 +45,11 @@ const AuthCard = () => {
           
           <CardContent className="pt-6">
             <TabsContent value="signin">
-              <SignInForm />
+              <SignInForm isOnline={isOnline} />
             </TabsContent>
             
             <TabsContent value="signup">
-              <SignUpForm />
+              <SignUpForm isOnline={isOnline} />
             </TabsContent>
           </CardContent>
         </Tabs>

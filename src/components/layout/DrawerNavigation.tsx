@@ -14,7 +14,8 @@ import {
   Bell, 
   LogOut, 
   User, 
-  LineChart
+  LineChart,
+  UserPlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -86,7 +87,7 @@ export default function DrawerNavigation() {
         });
       }
       
-      if (user.role === 'user' || !user.role) {
+      if (user.role === 'buyer' || !user.role) {
         items.push(
           {
             name: language === 'en' ? 'Products' : 'المنتجات',
@@ -187,18 +188,41 @@ export default function DrawerNavigation() {
               </DrawerClose>
             ))}
             {user && (
-              <DrawerClose asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-destructive"
-                  onClick={() => handleLogout(() => {})}
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span className="ml-2">
-                    {language === 'en' ? 'Logout' : 'تسجيل خروج'}
-                  </span>
-                </Button>
-              </DrawerClose>
+              <>
+                {user?.role === 'admin' && (
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-gold hover:bg-gold/10"
+                    onClick={() => navigate('/admin/users')}
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    {language === 'en' ? 'Manage Users' : 'إدارة المستخدمين'}
+                  </Button>
+                )}
+                
+                {user?.role === 'admin' && (
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-gold hover:bg-gold/10"
+                    onClick={() => navigate('/admin/add-user')}
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    {language === 'en' ? 'Add User' : 'إضافة مستخدم'}
+                  </Button>
+                )}
+                <DrawerClose asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-destructive"
+                    onClick={() => handleLogout(() => {})}
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span className="ml-2">
+                      {language === 'en' ? 'Logout' : 'تسجيل خروج'}
+                    </span>
+                  </Button>
+                </DrawerClose>
+              </>
             )}
           </div>
         </div>

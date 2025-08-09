@@ -2,17 +2,19 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/contexts/AuthContext";
 import { useOrders } from "@/contexts/OrderContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useOrderAnalytics } from "@/hooks/use-order-analytics"; 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const { language } = useLanguage();
-  const { allUsers } = useAuth();
   const { orders, getAllOrders } = useOrders();
   const allOrders = getAllOrders();
+  const navigate = useNavigate();
   
   const analytics = useOrderAnalytics(allOrders);
   const { orderStatusCounts, ordersByDay, totalSalesAmount, averageOrderValue, topSellingCategories } = analytics;
@@ -22,6 +24,20 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Header with Add User button */}
+      <div className="flex justify-between items-center">
+        <h2 className={`text-xl font-semibold ${language === 'ar' ? 'font-cairo' : ''}`}>
+          {language === 'en' ? 'Admin Dashboard' : 'لوحة تحكم المدير'}
+        </h2>
+        <Button
+          onClick={() => navigate('/admin/add-user')}
+          className="bg-gold text-navy hover:bg-gold-light"
+        >
+          <UserPlus className="h-4 w-4 mr-2" />
+          {language === 'en' ? 'Add User' : 'إضافة مستخدم'}
+        </Button>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -31,17 +47,6 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${totalSalesAmount.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              {language === "en" ? "Active Users" : "المستخدمون النشطون"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{allUsers.filter(u => u.active !== false).length}</div>
           </CardContent>
         </Card>
         
@@ -64,6 +69,19 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${averageOrderValue.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              {language === "en" ? "Pending Orders" : "الطلبات المعلقة"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {allOrders.filter(order => order.status === 'pending_seller_approval').length}
+            </div>
           </CardContent>
         </Card>
       </div>

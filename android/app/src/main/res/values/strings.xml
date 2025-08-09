@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">catchy-fabric-market</string>
+    <string name="title_activity_main">catchy-fabric-market</string>
+    <string name="package_name">com.catchy.fabricmarket</string>
+    <string name="custom_url_scheme">com.catchy.fabricmarket</string>
+</resources>

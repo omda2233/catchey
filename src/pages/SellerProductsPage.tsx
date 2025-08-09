@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { MOCK_PRODUCTS, Product } from "@/models/Product";
+import { Product, ProductCategory } from "@/models/Product";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Edit, 
@@ -22,18 +22,55 @@ import {
   Trash2
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { productService, realtimeService } from '@/lib/firestore';
+import { Product as FirestoreProduct } from '@/models/firestoreSchemas';
 
 export default function SellerProductsPage() {
   const { user } = useAuth();
   const { language } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Filter products by seller ID and search term
-  const sellerProducts = MOCK_PRODUCTS.filter(
+  // Helper: Map Firestore Product to App Product
+  function mapFirestoreProductToAppProduct(fProduct: FirestoreProduct): Product {
+    return {
+      id: fProduct.id!,
+      name: fProduct.name,
+      nameAr: undefined, // Not present in Firestore
+      description: fProduct.description || '',
+      descriptionAr: undefined, // Not present in Firestore
+      price: fProduct.price,
+      category: fProduct.category as ProductCategory,
+      image: fProduct.imageUrl,
+      images: fProduct.images || [fProduct.imageUrl],
+      rating: 5, // Default or fetch from reviews if available
+      inStock: 1, // Not present in Firestore, default to 1
+      sellerId: fProduct.ownerId,
+      sellerName: fProduct.ownerName || '',
+      reviewCount: 0, // Not present in Firestore
+      featured: false, // Not present in Firestore
+      popular: false, // Not present in Firestore
+      currency: 'USD', // Default
+      createdAt: new Date(fProduct.createdAt),
+      isReserved: fProduct.isReserved,
+      downPaymentRequired: !!fProduct.reservationPrice,
+      manufacturingType: undefined // Not present in Firestore
+    };
+  }
+
+  // Fetch seller's products in real-time from Firestore
+  useEffect(() => {
+    if (!user) return;
+    productService.getProductsByOwner(user.id).then(firestoreProducts => {
+      setProducts(firestoreProducts.map(mapFirestoreProductToAppProduct));
+    });
+  }, [user]);
+
+  // Filter products by search term
+  const sellerProducts = products.filter(
     (product) => 
-      product.sellerId === user?.id && 
       (product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (product.nameAr && product.nameAr.includes(searchTerm)))
   );
@@ -54,10 +91,10 @@ export default function SellerProductsPage() {
 
   const handleDeleteProduct = (productId: string) => {
     // In a real app, this would call an API to delete the product
-    const index = MOCK_PRODUCTS.findIndex(product => product.id === productId);
+    const index = products.findIndex(product => product.id === productId);
     if (index !== -1) {
-      const deletedProduct = {...MOCK_PRODUCTS[index]};
-      MOCK_PRODUCTS.splice(index, 1);
+      const deletedProduct = {...products[index]};
+      products.splice(index, 1);
       
       toast({
         title: language === 'en' ? "Product Deleted" : "تم حذف المنتج",

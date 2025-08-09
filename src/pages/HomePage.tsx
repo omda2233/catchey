@@ -1,11 +1,13 @@
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { CategoryCard } from '@/components/CategoryCard';
 import { ProductCard } from '@/components/ProductCard';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { MOCK_PRODUCTS, ProductCategory } from '@/models/Product';
+import { Product as FirestoreProduct } from '@/models/firestoreSchemas';
+import { productService } from '@/lib/firestore';
+import { Product, ProductCategory } from '@/models/Product';
 import { Button } from '@/components/ui/button';
 
 const categories: {category: ProductCategory; imageUrl: string}[] = [
@@ -31,9 +33,37 @@ export default function HomePage() {
   const { language } = useLanguage();
   const navigate = useNavigate();
   
-  // Get featured and popular products
-  const featuredProducts = MOCK_PRODUCTS.filter(p => p.featured).slice(0, 1);
-  const popularProducts = MOCK_PRODUCTS.filter(p => p.popular).slice(0, 4);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [popularProducts, setPopularProducts] = useState<Product[]>([]);
+  useEffect(() => {
+    productService.getAvailableProducts(100).then(firestoreProducts => {
+      const mapped = firestoreProducts.map(fProduct => ({
+        id: fProduct.id!,
+        name: fProduct.name,
+        nameAr: undefined,
+        description: fProduct.description || '',
+        descriptionAr: undefined,
+        price: fProduct.price,
+        category: fProduct.category as ProductCategory,
+        image: fProduct.imageUrl,
+        images: fProduct.images || [fProduct.imageUrl],
+        rating: 5,
+        inStock: 1,
+        sellerId: fProduct.ownerId,
+        sellerName: fProduct.ownerName || '',
+        reviewCount: 0,
+        featured: false,
+        popular: false,
+        currency: 'USD',
+        createdAt: new Date(fProduct.createdAt),
+        isReserved: fProduct.isReserved,
+        downPaymentRequired: !!fProduct.reservationPrice,
+        manufacturingType: undefined
+      }));
+      setFeaturedProducts(mapped.slice(0, 1));
+      setPopularProducts(mapped.slice(0, 4));
+    });
+  }, []);
   
   return (
     <PageLayout>

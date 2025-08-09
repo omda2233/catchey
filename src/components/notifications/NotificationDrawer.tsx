@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -9,11 +8,12 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Bell } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useNotifications } from '@/contexts/NotificationContext';
 
 export type Notification = {
   id: string;
@@ -25,43 +25,16 @@ export type Notification = {
   relatedId?: string; // Order ID, product ID, etc.
 };
 
-// Mock notifications - in a real app these would come from a context or server
-const mockNotifications: Notification[] = [
-  {
-    id: "n1",
-    title: "Order Approved",
-    message: "Your order #ORD-001 has been approved by the seller.",
-    timestamp: new Date("2023-05-15T10:30:00"),
-    read: false,
-    type: "order",
-    relatedId: "ORD-001"
-  },
-  {
-    id: "n2",
-    title: "Payment Received",
-    message: "We have received your payment for order #ORD-002.",
-    timestamp: new Date("2023-05-14T14:45:00"),
-    read: true,
-    type: "payment",
-    relatedId: "ORD-002"
-  },
-  {
-    id: "n3",
-    title: "Shipping Update",
-    message: "Your order #ORD-003 is out for delivery.",
-    timestamp: new Date("2023-05-13T09:15:00"),
-    read: false,
-    type: "shipping",
-    relatedId: "ORD-003"
-  }
-];
-
 export default function NotificationDrawer() {
   const { user } = useAuth();
   const { language } = useLanguage();
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const {
+    notifications,
+    markAsRead,
+    markAllAsRead,
+    dismissNotification,
+    unreadCount
+  } = useNotifications();
 
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
@@ -77,16 +50,6 @@ export default function NotificationDrawer() {
     
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays} ${language === 'en' ? 'days ago' : 'يوم مضى'}`;
-  };
-
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, read: true } : n
-    ));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
   };
 
   return (
@@ -131,13 +94,22 @@ export default function NotificationDrawer() {
               {notifications.map((notification) => (
                 <div 
                   key={notification.id} 
-                  className={`p-3 rounded-md ${notification.read ? 'bg-background' : 'bg-muted'}`}
+                  className={`p-3 rounded-md relative ${notification.read ? 'bg-background' : 'bg-muted'}`}
                 >
                   <div className="flex justify-between items-start">
                     <h4 className="font-medium">{notification.title}</h4>
-                    <span className="text-xs text-muted-foreground">
-                      {formatTimeAgo(notification.timestamp)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {formatTimeAgo(notification.timestamp)}
+                      </span>
+                      <button
+                        className="ml-2 text-muted-foreground hover:text-red-500"
+                        onClick={() => dismissNotification(notification.id)}
+                        aria-label="Dismiss"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
                   {!notification.read && (

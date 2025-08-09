@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Order, OrderStatus } from '@/models/Order';
 import { User } from '@/contexts/AuthContext';
@@ -56,18 +55,22 @@ export const useOrderCreation = (
         name: language === 'en' ? item.product.name : (item.product.nameAr || item.product.name),
         price: item.product.price,
         quantity: item.quantity,
-        image: item.product.images?.[0] || '/placeholder.svg'
+        image: item.product.images?.[0] || '/placeholder.svg',
+        isReserved: !!item.product.isReserved,
+        downPaymentRequired: !!item.product.isReserved
       }));
 
-      // Calculate deposit amount for pickup orders
-      const depositAmount = deliveryMethod === 'pickup' ? calculateDepositAmount(orderTotal) : 0;
+      // If any product is reserved, deposit is 50%
+      const hasReservation = orderProducts.some(p => p.isReserved);
+      const depositAmount = hasReservation ? Math.round((orderTotal * 0.5) * 100) / 100 : (deliveryMethod === 'pickup' ? calculateDepositAmount(orderTotal) : 0);
 
       const newOrder: Order = {
         id: `ORD-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
         customer: {
           id: user.id,
           name: user.name,
-          email: user.email
+          email: user.email,
+          phoneNumber: ''
         },
         sellerId,
         sellerName,
@@ -77,7 +80,7 @@ export const useOrderCreation = (
         paidAmount: 0, // Initially nothing is paid
         remainingAmount: orderTotal,
         deliveryMethod,
-        status: 'pending_approval',
+        status: 'pending_seller_approval',
         shippingAddress: deliveryMethod === 'shipping' ? shippingAddress : undefined,
         shippingCompanyId: deliveryMethod === 'shipping' ? '4' : undefined, // Default to our mock shipping company
         shippingFee,

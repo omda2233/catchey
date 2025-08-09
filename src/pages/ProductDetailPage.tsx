@@ -6,7 +6,7 @@ import { ProductCarousel } from '@/components/ProductCarousel';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
-import { MOCK_PRODUCTS, Product } from '@/models/Product';
+import { Product, ProductCategory } from '@/models/Product';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, ChevronLeft, ChevronRight, ShoppingCart, Store, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductCard } from '@/components/ProductCard';
+import { Product as FirestoreProduct } from '@/models/firestoreSchemas';
+import { productService } from '@/lib/firestore';
 
 export default function ProductDetailPage() {
   const { productId } = useParams();
@@ -30,22 +32,70 @@ export default function ProductDetailPage() {
   useEffect(() => {
     setIsLoading(true);
     window.scrollTo(0, 0);
-    
-    // Simulate API request delay
-    setTimeout(() => {
-      const foundProduct = MOCK_PRODUCTS.find(p => p.id === productId);
-      setProduct(foundProduct || null);
-      
-      // Find related products (same category)
-      if (foundProduct) {
-        const related = MOCK_PRODUCTS.filter(
-          p => p.category === foundProduct.category && p.id !== foundProduct.id
-        ).slice(0, 4);
-        setRelatedProducts(related);
+    if (!productId) return;
+    productService.getProductById(productId).then(fProduct => {
+      if (!fProduct) {
+        setProduct(null);
+        setRelatedProducts([]);
+        setIsLoading(false);
+        return;
       }
-      
-      setIsLoading(false);
-    }, 800);
+      const mappedProduct: Product = {
+        id: fProduct.id!,
+        name: fProduct.name,
+        nameAr: undefined,
+        description: fProduct.description || '',
+        descriptionAr: undefined,
+        price: fProduct.price,
+        category: fProduct.category as ProductCategory,
+        image: fProduct.imageUrl,
+        images: fProduct.images || [fProduct.imageUrl],
+        rating: 5,
+        inStock: 1,
+        sellerId: fProduct.ownerId,
+        sellerName: fProduct.ownerName || '',
+        reviewCount: 0,
+        featured: false,
+        popular: false,
+        currency: 'USD',
+        createdAt: new Date(fProduct.createdAt),
+        isReserved: fProduct.isReserved,
+        downPaymentRequired: !!fProduct.reservationPrice,
+        manufacturingType: undefined
+      };
+      setProduct(mappedProduct);
+      // Fetch related products (same category, not this product)
+      productService.getAvailableProducts(20).then(allProducts => {
+        setRelatedProducts(
+          allProducts
+            .filter(p => p.category === fProduct.category && p.id !== fProduct.id)
+            .map(p => ({
+              id: p.id!,
+              name: p.name,
+              nameAr: undefined,
+              description: p.description || '',
+              descriptionAr: undefined,
+              price: p.price,
+              category: p.category as ProductCategory,
+              image: p.imageUrl,
+              images: p.images || [p.imageUrl],
+              rating: 5,
+              inStock: 1,
+              sellerId: p.ownerId,
+              sellerName: p.ownerName || '',
+              reviewCount: 0,
+              featured: false,
+              popular: false,
+              currency: 'USD',
+              createdAt: new Date(p.createdAt),
+              isReserved: p.isReserved,
+              downPaymentRequired: !!p.reservationPrice,
+              manufacturingType: undefined
+            }))
+          );
+        setIsLoading(false);
+      });
+    });
   }, [productId]);
   
   const handleAddToCart = () => {

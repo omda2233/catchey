@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -111,28 +110,28 @@ export default function OrdersPage() {
   // Get status badge based on order status
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
-      case 'pending_approval':
+      case 'pending_seller_approval':
         return (
           <Badge variant="secondary" className="bg-amber-500/20 text-amber-300">
             <Clock className="h-3 w-3 mr-1" />
-            {language === 'en' ? 'Pending Approval' : 'في انتظار الموافقة'}
+            {language === 'en' ? 'Pending Seller Approval' : 'في انتظار موافقة البائع'}
           </Badge>
         );
-      case 'approved':
+      case 'seller_approved':
         return (
           <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
             <CheckCircle className="h-3 w-3 mr-1" />
-            {language === 'en' ? 'Approved' : 'تمت الموافقة'}
+            {language === 'en' ? 'Seller Approved' : 'تمت موافقة البائع'}
           </Badge>
         );
-      case 'rejected':
+      case 'seller_rejected':
         return (
           <Badge variant="secondary" className="bg-red-500/20 text-red-300">
             <XCircle className="h-3 w-3 mr-1" />
-            {language === 'en' ? 'Rejected' : 'تم الرفض'}
+            {language === 'en' ? 'Seller Rejected' : 'تم رفض البائع'}
           </Badge>
         );
-      case 'paid_deposit':
+      case 'paid_partial':
         return (
           <Badge variant="secondary" className="bg-amber-500/20 text-amber-300">
             <DollarSign className="h-3 w-3 mr-1" />
@@ -192,8 +191,8 @@ export default function OrdersPage() {
 
     if (user.role === 'seller') {
       // Sellers can approve or reject pending orders
-      if (order.status === 'pending_approval') {
-        return ['approved', 'rejected'];
+      if (order.status === 'pending_seller_approval') {
+        return ['seller_approved', 'seller_rejected'];
       }
       return [order.status];
     }
@@ -229,15 +228,7 @@ export default function OrdersPage() {
 
   // Check if payment button should be shown
   const showPaymentButton = (order: Order): boolean => {
-    // Only show payment button for the customer
-    if (!user || user.id !== order.customer.id) return false;
-
-    // Show payment button for approved orders or orders with deposit paid
-    if (order.status === 'approved' || order.status === 'paid_deposit') {
-      return order.remainingAmount > 0;
-    }
-
-    return false;
+    return ['seller_approved', 'paid_partial'].includes(order.status);
   };
 
   if (!user) return null;
@@ -495,10 +486,10 @@ export default function OrdersPage() {
                                   value={status} 
                                   className="text-gold focus:bg-gold/10 focus:text-gold"
                                 >
-                                  {status === 'pending_approval' ? (language === 'en' ? 'Pending Approval' : 'في انتظار الموافقة') :
-                                   status === 'approved' ? (language === 'en' ? 'Approved' : 'تمت الموافقة') :
-                                   status === 'rejected' ? (language === 'en' ? 'Rejected' : 'تم الرفض') :
-                                   status === 'paid_deposit' ? (language === 'en' ? 'Deposit Paid' : 'تم دفع العربون') :
+                                  {status === 'pending_seller_approval' ? (language === 'en' ? 'Pending Seller Approval' : 'في انتظار موافقة البائع') :
+                                   status === 'seller_approved' ? (language === 'en' ? 'Seller Approved' : 'تمت موافقة البائع') :
+                                   status === 'seller_rejected' ? (language === 'en' ? 'Seller Rejected' : 'تم رفض البائع') :
+                                   status === 'paid_partial' ? (language === 'en' ? 'Deposit Paid' : 'تم دفع العربون') :
                                    status === 'paid_full' ? (language === 'en' ? 'Paid in Full' : 'تم الدفع بالكامل') :
                                    status === 'processing' ? (language === 'en' ? 'Processing' : 'قيد المعالجة') :
                                    status === 'shipped' ? (language === 'en' ? 'Shipped' : 'تم الشحن') :
@@ -525,7 +516,7 @@ export default function OrdersPage() {
                       className="bg-gold text-navy hover:bg-gold/90"
                     >
                       <DollarSign className="h-4 w-4 mr-2" />
-                      {order.status === 'paid_deposit' 
+                      {order.status === 'paid_partial' 
                         ? language === 'en' ? 'Pay Remaining Balance' : 'دفع الرصيد المتبقي'
                         : language === 'en' ? 'Make Payment' : 'إجراء الدفع'
                       }

@@ -4,6 +4,8 @@ import { useSearchParams } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { ProductCard } from '@/components/ProductCard';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Product as FirestoreProduct } from '@/models/firestoreSchemas';
+import { productService } from '@/lib/firestore';
 import { MOCK_PRODUCTS, ProductCategory, Product } from '@/models/Product';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -34,57 +36,33 @@ export default function ProductListingPage() {
   // Filter and sort products
   useEffect(() => {
     setIsLoading(true);
-    
-    // Simulate API request delay
-    setTimeout(() => {
-      let filteredProducts = [...MOCK_PRODUCTS];
-      
-      // Apply category filter
-      if (categoryParam && ['fabrics', 'accessories', 'tools', 'threads'].includes(categoryParam)) {
-        setActiveCategory(categoryParam as ProductCategory);
-        filteredProducts = filteredProducts.filter(p => p.category === categoryParam);
-      } else if (featured) {
-        filteredProducts = filteredProducts.filter(p => p.featured);
-      } else if (popular) {
-        filteredProducts = filteredProducts.filter(p => p.popular);
-      }
-      
-      // Apply search query filter
-      if (searchQuery) {
-        filteredProducts = filteredProducts.filter(p => 
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (p.nameAr && p.nameAr.includes(searchQuery)) ||
-          (p.descriptionAr && p.descriptionAr.includes(searchQuery))
-        );
-      }
-      
-      // Apply category tab filter (if a tab is selected)
-      if (activeCategory !== 'all' && !categoryParam) {
-        filteredProducts = filteredProducts.filter(p => p.category === activeCategory);
-      }
-      
-      // Apply sorting
-      switch (sortBy) {
-        case 'price_asc':
-          filteredProducts.sort((a, b) => a.price - b.price);
-          break;
-        case 'price_desc':
-          filteredProducts.sort((a, b) => b.price - a.price);
-          break;
-        case 'popular':
-          filteredProducts.sort((a, b) => b.reviewCount - a.reviewCount);
-          break;
-        case 'newest':
-        default:
-          filteredProducts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-          break;
-      }
-      
-      setProducts(filteredProducts);
+    productService.getAvailableProducts(100).then(firestoreProducts => {
+      setProducts(firestoreProducts.map(fProduct => ({
+        id: fProduct.id!,
+        name: fProduct.name,
+        nameAr: undefined,
+        description: fProduct.description || '',
+        descriptionAr: undefined,
+        price: fProduct.price,
+        category: fProduct.category as ProductCategory,
+        image: fProduct.imageUrl,
+        images: fProduct.images || [fProduct.imageUrl],
+        rating: 5,
+        inStock: 1,
+        sellerId: fProduct.ownerId,
+        sellerName: fProduct.ownerName || '',
+        reviewCount: 0,
+        featured: false,
+        popular: false,
+        currency: 'USD',
+        createdAt: new Date(fProduct.createdAt),
+        isReserved: fProduct.isReserved,
+        downPaymentRequired: !!fProduct.reservationPrice,
+        manufacturingType: undefined
+      })));
       setIsLoading(false);
-    }, 800);
-  }, [categoryParam, featured, popular, searchQuery, activeCategory, sortBy]);
+    });
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

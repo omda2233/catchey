@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && (
+        // Admins can create any user with any role
+        (request.resource.data.role in ['buyer', 'seller', 'delivery', 'admin'] && request.auth.token.role == 'admin') ||
+        // Non-admins can only create users with role 'buyer' and only for themselves
+        (request.resource.data.role == 'buyer' && request.auth.uid == userId)
+      ) &&
+      // Required fields
+      ("name" in request.resource.data &&
+       "email" in request.resource.data &&
+       "role" in request.resource.data &&
+       "created_at" in request.resource.data);
+      allow update, delete: if request.auth != null && (
+        // Admins can update/delete any user
+        request.auth.token.role == 'admin' ||
+        // Users can update/delete their own profile, but not change their role
+        (request.auth.uid == userId && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role))
+      );
+    }
+    
+    // Products collection
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        (request.auth.uid == resource.data.seller_id || request.auth.token.role == 'admin');
+    }
+    
+    // Orders collection
+    match /orders/{orderId} {
+      allow read: if request.auth != null &&
+        (request.auth.uid == resource.data.buyer_id ||
+         request.auth.uid == resource.data.seller_id ||
+         request.auth.uid == resource.data.delivery_id ||
+         request.auth.token.role == 'admin');
+      allow write: if request.auth != null &&
+        (request.auth.uid == resource.data.buyer_id ||
+         request.auth.uid == resource.data.seller_id ||
+         request.auth.uid == resource.data.delivery_id ||
+         request.auth.token.role == 'admin');
+    }
+    
+    // Transactions collection - users can read their own, only functions can write
+    match /transactions/{transactionId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.user_id || request.auth.token.role == 'admin');
+      allow write: if false; // Only Cloud Functions can write transactions
+    }
+    
+    // Requests collection
+    match /requests/{requestId} {
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.user_id || request.auth.token.role == 'admin');
+    }
+    
+    // Notifications collection - users can read their own, only functions can write
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.user_id;
+      allow write: if false; // Only Cloud Functions can write notifications
+    }
+    
+    // Logs collection - users can read their own, only functions can write
+    match /logs/{logId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.user_id;
+      allow write: if false; // Only Cloud Functions can write logs
+    }
+  }
+} 

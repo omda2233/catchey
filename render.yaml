@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: catchy-fabric-market-backend
+    repo: https://github.com/omda2233/catchey.git
+    rootDir: backend
+    envVars:
+      - fromDotEnv: true
+    buildCommand: npm install
+    startCommand: node server.js
+    runtime: node
+    plan: starter
+    branch: main

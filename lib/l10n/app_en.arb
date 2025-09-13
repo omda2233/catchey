@@ -100,5 +100,32 @@
   "orderAccepted": "Order accepted successfully",
   "orderRejected": "Order rejected",
   "orderShipped": "Order marked as shipped",
-  "errorLoadingOrders": "Error loading orders"
-} 
+  "errorLoadingOrders": "Error loading orders",
+
+  "verifyEmail": "Verify Your Email",
+
+  "otpSent": "A verification link has been sent to your email address.",
+
+  "resendCode": "Resend Email",
+
+  "back": "Back to Login",
+
+  "pleaseEnter": "Please enter your",
+
+  "invalidEmail": "Please enter a valid email address.",
+
+  "invalidPassword": "Password must be at least 6 characters.",
+
+  "confirmPassword": "Confirm Password",
+
+  "passwordsDontMatch": "Passwords do not match.",
+
+  "alreadyHaveAccount": "Already have an account?",
+
+  "signIn": "Sign In",
+
+  "dontHaveAccount": "Don't have an account?",
+  "register": "Register",
+
+  "resetPassword": "Reset Password"
+}

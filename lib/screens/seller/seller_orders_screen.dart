@@ -3,274 +3,310 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
 import '../../models/order_model.dart';
+import '../../widgets/custom_button.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class SellerOrdersScreen extends StatelessWidget {
+class SellerOrdersScreen extends StatefulWidget {
+  @override
+  _SellerOrdersScreenState createState() => _SellerOrdersScreenState();
+}
+
+class _SellerOrdersScreenState extends State<SellerOrdersScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final OrderService _orderService = OrderService();
+  bool _isLoading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 6, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updateOrderStatus(String orderId, OrderStatus newStatus) async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      await _orderService.updateOrderStatus(
+        orderId: orderId,
+        status: newStatus.toString().split('.').last,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Order status updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final orderService = OrderService();
+    final authProvider = Provider.of<AuthProvider>(context);
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.orders),
+        title: Text('Orders'),
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          tabs: [
+            Tab(text: 'All'),
+            Tab(text: 'Pending'),
+            Tab(text: 'Processing'),
+            Tab(text: 'Shipped'),
+            Tab(text: 'Delivered'),
+            Tab(text: 'Cancelled'),
+          ],
+        ),
       ),
-      body: StreamBuilder<List<OrderModel>>(
-        stream: orderService.streamSellerOrders(authProvider.currentUser!.uid),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text(l10n.errorLoadingOrders));
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          final orders = snapshot.data!;
-
-          if (orders.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.shopping_bag_outlined,
-                    size: 64,
-                    color: theme.colorScheme.outline,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    l10n.noOrders,
-                    style: theme.textTheme.titleLarge,
-                  ),
-                ],
+      body: Column(
+        children: [
+          if (_error != null)
+            Container(
+              width: double.infinity,
+              margin: EdgeInsets.all(16),
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
               ),
-            );
-          }
-
-          return ListView.builder(
-            padding: EdgeInsets.all(16),
-            itemCount: orders.length,
-            itemBuilder: (context, index) {
-              final order = orders[index];
-              return Card(
-                margin: EdgeInsets.only(bottom: 16),
-                child: ExpansionTile(
-                  title: Text(
-                    '${l10n.order} #${order.id.substring(0, 8)}',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  subtitle: Text(
-                    '${l10n.total}: \$${order.total.toStringAsFixed(2)}',
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  trailing: _buildOrderStatusChip(context, order.status),
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Customer Info
-                          Text(
-                            l10n.customerInfo,
-                            style: theme.textTheme.titleSmall,
-                          ),
-                          SizedBox(height: 8),
-                          Text('${l10n.name}: ${order.customerName}'),
-                          Text('${l10n.email}: ${order.customerEmail}'),
-                          if (order.customerPhone != null)
-                            Text('${l10n.phone}: ${order.customerPhone}'),
-                          SizedBox(height: 16),
-
-                          // Order Items
-                          Text(
-                            l10n.orderItems,
-                            style: theme.textTheme.titleSmall,
-                          ),
-                          SizedBox(height: 8),
-                          ...order.items.map((item) => Padding(
-                                padding: EdgeInsets.only(bottom: 8),
-                                child: Row(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(
-                                        item.image,
-                                        width: 60,
-                                        height: 60,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            item.productName,
-                                            style: theme.textTheme.bodyMedium,
-                                          ),
-                                          Text(
-                                            '${l10n.quantity}: ${item.quantity}',
-                                            style: theme.textTheme.bodySmall,
-                                          ),
-                                          Text(
-                                            '\$${item.price.toStringAsFixed(2)}',
-                                            style: theme.textTheme.bodyMedium
-                                                ?.copyWith(
-                                              color: theme.colorScheme.primary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )),
-                          SizedBox(height: 16),
-
-                          // Order Actions
-                          if (order.status == OrderStatus.pending)
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: () async {
-                                      try {
-                                        await orderService.updateOrderStatus(
-                                          order.id,
-                                          OrderStatus.accepted,
-                                        );
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(l10n.orderAccepted),
-                                          ),
-                                        );
-                                      } catch (e) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(e.toString()),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    child: Text(l10n.accept),
-                                  ),
-                                ),
-                                SizedBox(width: 16),
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: () async {
-                                      try {
-                                        await orderService.updateOrderStatus(
-                                          order.id,
-                                          OrderStatus.rejected,
-                                        );
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(l10n.orderRejected),
-                                          ),
-                                        );
-                                      } catch (e) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(e.toString()),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: Colors.red,
-                                    ),
-                                    child: Text(l10n.reject),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          if (order.status == OrderStatus.accepted)
-                            OutlinedButton(
-                              onPressed: () async {
-                                try {
-                                  await orderService.updateOrderStatus(
-                                    order.id,
-                                    OrderStatus.shipped,
-                                  );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(l10n.orderShipped),
-                                    ),
-                                  );
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(e.toString()),
-                                    ),
-                                  );
-                                }
-                              },
-                              child: Text(l10n.markAsShipped),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+              child: Text(
+                _error!,
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildOrdersList(authProvider.user!.uid, null),
+                _buildOrdersList(authProvider.user!.uid, OrderStatus.pending),
+                _buildOrdersList(authProvider.user!.uid, OrderStatus.processing),
+                _buildOrdersList(authProvider.user!.uid, OrderStatus.shipped),
+                _buildOrdersList(authProvider.user!.uid, OrderStatus.delivered),
+                _buildOrdersList(authProvider.user!.uid, OrderStatus.cancelled),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildOrderStatusChip(BuildContext context, OrderStatus status) {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildOrdersList(String sellerId, OrderStatus? status) {
+    return StreamBuilder<List<OrderModel>>(
+      stream: status != null
+          ? _orderService.getOrdersByStatus(sellerId, status)
+          : _orderService.streamSellerOrders(sellerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text('Error: ${snapshot.error}'),
+          );
+        }
+
+        final orders = snapshot.data ?? [];
+
+        if (orders.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.inbox,
+                  size: 64,
+                  color: Colors.grey,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'No orders found',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: EdgeInsets.all(16),
+          itemCount: orders.length,
+          itemBuilder: (context, index) {
+            final order = orders[index];
+            return _buildOrderCard(order);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildOrderCard(OrderModel order) {
     final theme = Theme.of(context);
 
-    Color color;
-    String text;
+    return Card(
+      margin: EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Order #${order.id.substring(0, 8)}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(order.status).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _getStatusColor(order.status).withOpacity(0.3),
+                    ),
+                  ),
+                  child: Text(
+                    order.status.toString().split('.').last.toUpperCase(),
+                    style: TextStyle(
+                      color: _getStatusColor(order.status),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Total: \$${order.totalAmount.toStringAsFixed(2)}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.primaryColor,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Items: ${order.items.length}',
+              style: theme.textTheme.bodyMedium,
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Date: ${_formatDate(order.createdAt)}',
+              style: theme.textTheme.bodySmall,
+            ),
+            SizedBox(height: 16),
 
-    switch (status) {
-      case OrderStatus.pending:
-        color = Colors.orange;
-        text = l10n.pending;
-        break;
-      case OrderStatus.accepted:
-        color = Colors.blue;
-        text = l10n.accepted;
-        break;
-      case OrderStatus.rejected:
-        color = Colors.red;
-        text = l10n.rejected;
-        break;
-      case OrderStatus.shipped:
-        color = Colors.green;
-        text = l10n.shipped;
-        break;
-      case OrderStatus.delivered:
-        color = Colors.green;
-        text = l10n.delivered;
-        break;
-      case OrderStatus.cancelled:
-        color = Colors.red;
-        text = l10n.cancelled;
-        break;
-    }
+            // Order items
+            ...order.items.map((item) => Padding(
+                  padding: EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Product ID: ${item.productId}'),
+                      Text('Qty: ${item.quantity} × \$${item.price.toStringAsFixed(2)}'),
+                    ],
+                  ),
+                )),
 
-    return Chip(
-      label: Text(
-        text,
-        style: TextStyle(color: Colors.white),
+            SizedBox(height: 16),
+
+            // Action buttons based on status
+            _buildActionButtons(order),
+          ],
+        ),
       ),
-      backgroundColor: color,
     );
   }
-} 
+
+  Widget _buildActionButtons(OrderModel order) {
+    switch (order.status) {
+      case OrderStatus.pending:
+        return Row(
+          children: [
+            Expanded(
+              child: CustomButton(
+                text: 'Accept',
+                onPressed: _isLoading ? null : () => _updateOrderStatus(order.id, OrderStatus.processing),
+                backgroundColor: Colors.green,
+              ),
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: CustomButton(
+                text: 'Reject',
+                onPressed: _isLoading ? null : () => _updateOrderStatus(order.id, OrderStatus.cancelled),
+                backgroundColor: Colors.red,
+              ),
+            ),
+          ],
+        );
+      case OrderStatus.processing:
+        return CustomButton(
+          text: 'Mark as Shipped',
+          onPressed: _isLoading ? null : () => _updateOrderStatus(order.id, OrderStatus.shipped),
+          backgroundColor: Colors.blue,
+        );
+      case OrderStatus.shipped:
+        return CustomButton(
+          text: 'Mark as Delivered',
+          onPressed: _isLoading ? null : () => _updateOrderStatus(order.id, OrderStatus.delivered),
+          backgroundColor: Colors.green,
+        );
+      default:
+        return SizedBox.shrink();
+    }
+  }
+
+  Color _getStatusColor(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return Colors.orange;
+      case OrderStatus.processing:
+        return Colors.blue;
+      case OrderStatus.shipped:
+        return Colors.purple;
+      case OrderStatus.delivered:
+        return Colors.green;
+      case OrderStatus.cancelled:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+}

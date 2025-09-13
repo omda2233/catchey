@@ -6,8 +6,8 @@ class CustomLoader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation<Color>(goldGradientStart),
+        valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
       ),
     );
   }
-} 
+}

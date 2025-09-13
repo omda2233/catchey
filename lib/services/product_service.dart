@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../models/product_model.dart';
-import '../models/product.dart';
 
 class ProductService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -98,8 +97,7 @@ class ProductService {
   Stream<List<ProductModel>> getProductsByCategory(String category) {
     return _firestore
         .collection(_collection)
-        .where('categories', arrayContains: category)
-        .where('isAvailable', isEqualTo: true)
+        .where('category', isEqualTo: category)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => ProductModel.fromFirestore(doc))
@@ -110,7 +108,7 @@ class ProductService {
   Stream<List<ProductModel>> getProductsBySeller(String sellerId) {
     return _firestore
         .collection(_collection)
-        .where('sellerId', isEqualTo: sellerId)
+        .where('seller_id', isEqualTo: sellerId)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => ProductModel.fromFirestore(doc))
@@ -121,11 +119,26 @@ class ProductService {
   Stream<List<ProductModel>> getAvailableProducts() {
     return _firestore
         .collection(_collection)
-        .where('isAvailable', isEqualTo: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => ProductModel.fromFirestore(doc))
             .toList());
+  }
+
+  // Search products
+  Future<List<ProductModel>> searchProducts(String query) async {
+    try {
+      final snapshot = await _firestore
+          .collection(_collection)
+          .orderBy('name')
+          .startAt([query])
+          .endAt([query + '\uf8ff'])
+          .get();
+      return snapshot.docs.map((doc) => ProductModel.fromFirestore(doc)).toList();
+    } catch (e) {
+      print('Error searching products: $e');
+      return [];
+    }
   }
 
   // Upload images to Firebase Storage
@@ -158,136 +171,5 @@ class ProductService {
       print('Error deleting image: $e');
       rethrow;
     }
-  }
-
-  // Update product availability
-  Future<void> updateAvailability(String productId, bool isAvailable) async {
-    try {
-      await _firestore.collection(_collection).doc(productId).update({
-        'isAvailable': isAvailable,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      print('Error updating product availability: $e');
-      rethrow;
-    }
-  }
-
-  // Update product stock
-  Future<void> updateStock(String productId, int stock) async {
-    try {
-      await _firestore.collection(_collection).doc(productId).update({
-        'stock': stock,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      print('Error updating product stock: $e');
-      rethrow;
-    }
-  }
-
-  Stream<List<Product>> getProducts(Map<String, dynamic> filters) {
-    Query query = _firestore.collection(_collection);
-
-    // Apply category filter
-    if (filters['category'] != null && filters['category'] != 'all') {
-      query = query.where('category', isEqualTo: filters['category']);
-    }
-
-    // Apply price range filter
-    if (filters['minPrice'] != null) {
-      query = query.where('price', isGreaterThanOrEqualTo: filters['minPrice']);
-    }
-    if (filters['maxPrice'] != null && filters['maxPrice'] != double.infinity) {
-      query = query.where('price', isLessThanOrEqualTo: filters['maxPrice']);
-    }
-
-    // Apply in stock filter
-    if (filters['inStock'] == true) {
-      query = query.where('inStock', isEqualTo: true);
-    }
-
-    // Apply sorting
-    if (filters['sortBy'] != null) {
-      switch (filters['sortBy']) {
-        case 'name':
-          query = query.orderBy('name');
-          break;
-        case 'price_asc':
-          query = query.orderBy('price');
-          break;
-        case 'price_desc':
-          query = query.orderBy('price', descending: true);
-          break;
-        case 'newest':
-          query = query.orderBy('createdAt', descending: true);
-          break;
-      }
-    }
-
-    return query.snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => Product.fromFirestore(doc)).toList();
-    });
-  }
-
-  Future<Product> getProduct(String id) async {
-    final doc = await _firestore.collection(_collection).doc(id).get();
-    if (!doc.exists) {
-      throw Exception('Product not found');
-    }
-    return Product.fromFirestore(doc);
-  }
-
-  Future<List<Product>> getProductsByCategory(String category) async {
-    final snapshot = await _firestore
-        .collection(_collection)
-        .where('category', isEqualTo: category)
-        .get();
-    return snapshot.docs.map((doc) => Product.fromFirestore(doc)).toList();
-  }
-
-  Future<List<Product>> searchProducts(String query) async {
-    // This is a simple implementation. For better search functionality,
-    // consider using a service like Algolia or implementing full-text search
-    final snapshot = await _firestore
-        .collection(_collection)
-        .orderBy('name')
-        .startAt([query])
-        .endAt([query + '\uf8ff'])
-        .get();
-    return snapshot.docs.map((doc) => Product.fromFirestore(doc)).toList();
-  }
-
-  Future<String> addProduct(Product product) async {
-    final doc = await _firestore.collection(_collection).add(product.toFirestore());
-    return doc.id;
-  }
-
-  Future<void> updateProduct(Product product) async {
-    await _firestore
-        .collection(_collection)
-        .doc(product.id)
-        .update(product.toFirestore());
-  }
-
-  Future<void> deleteProduct(String id) async {
-    await _firestore.collection(_collection).doc(id).delete();
-  }
-
-  Future<List<Product>> getSellerProducts(String sellerId) async {
-    final snapshot = await _firestore
-        .collection(_collection)
-        .where('sellerId', isEqualTo: sellerId)
-        .get();
-    return snapshot.docs.map((doc) => Product.fromFirestore(doc)).toList();
-  }
-
-  Stream<List<Product>> streamSellerProducts(String sellerId) {
-    return _firestore
-        .collection(_collection)
-        .where('sellerId', isEqualTo: sellerId)
-        .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => Product.fromFirestore(doc)).toList());
   }
 } 

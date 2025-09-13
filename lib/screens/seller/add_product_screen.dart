@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/product_service.dart';
-import '../../models/product.dart';
+import '../../models/product_model.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class AddProductScreen extends StatefulWidget {
@@ -16,12 +16,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _formKey = GlobalKey<FormState>();
   final _productService = ProductService();
   final _imagePicker = ImagePicker();
-  
+
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   String _selectedCategory = 'fabrics';
-  bool _inStock = true;
   List<File> _images = [];
   bool _isLoading = false;
 
@@ -45,6 +44,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
     if (_images.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.selectAtLeastOneImage)),
       );
@@ -55,20 +55,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final product = Product(
+      final product = ProductModel(
         id: '', // Will be set by Firestore
         name: _nameController.text,
         description: _descriptionController.text,
         price: double.parse(_priceController.text),
         category: _selectedCategory,
-        inStock: _inStock,
+        images: [], // Will be set by the service
         createdAt: DateTime.now(),
-        sellerId: authProvider.currentUser!.uid,
-        imageUrl: '', // Will be set after upload
+        sellerId: authProvider.user!.uid,
       );
 
       await _productService.addProduct(product, _images);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.productAdded)),
@@ -217,16 +216,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 }
               },
             ),
-            SizedBox(height: 16),
-
-            // In Stock Switch
-            SwitchListTile(
-              title: Text(l10n.inStock),
-              value: _inStock,
-              onChanged: (value) {
-                setState(() => _inStock = value);
-              },
-            ),
             SizedBox(height: 24),
 
             // Submit Button
@@ -245,4 +234,4 @@ class _AddProductScreenState extends State<AddProductScreen> {
       ),
     );
   }
-} 
+}

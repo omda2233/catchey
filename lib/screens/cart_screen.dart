@@ -17,8 +17,8 @@ class CartScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.cart),
       ),
-      body: StreamBuilder<Cart>(
-        stream: cartService.streamCart(authProvider.currentUser!.uid),
+      body: StreamBuilder<CartModel>(
+        stream: cartService.streamCart(authProvider.user!.uid),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text(l10n.errorLoadingCart));
@@ -77,7 +77,7 @@ class CartScreen extends StatelessWidget {
                       ),
                       onDismissed: (_) {
                         cartService.removeFromCart(
-                          authProvider.currentUser!.uid,
+                          authProvider.user!.uid,
                           item.product.id,
                         );
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -87,7 +87,7 @@ class CartScreen extends StatelessWidget {
                               label: l10n.undo,
                               onPressed: () {
                                 cartService.addToCart(
-                                  authProvider.currentUser!.uid,
+                                  authProvider.user!.uid,
                                   item.product,
                                   quantity: item.quantity,
                                 );
@@ -106,7 +106,7 @@ class CartScreen extends StatelessWidget {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: Image.network(
-                                  item.product.imageUrl,
+                                  item.product.images.first,
                                   width: 80,
                                   height: 80,
                                   fit: BoxFit.cover,
@@ -144,7 +144,7 @@ class CartScreen extends StatelessWidget {
                                           onPressed: item.quantity > 1
                                               ? () {
                                                   cartService.updateQuantity(
-                                                    authProvider.currentUser!.uid,
+                                                    authProvider.user!.uid,
                                                     item.product.id,
                                                     item.quantity - 1,
                                                   );
@@ -159,7 +159,7 @@ class CartScreen extends StatelessWidget {
                                           icon: Icon(Icons.add),
                                           onPressed: () {
                                             cartService.updateQuantity(
-                                              authProvider.currentUser!.uid,
+                                              authProvider.user!.uid,
                                               item.product.id,
                                               item.quantity + 1,
                                             );
@@ -237,4 +237,4 @@ class CartScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

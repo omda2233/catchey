@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/product_service.dart';
-import '../../models/product.dart';
+import '../../models/product_model.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/search_bar.dart';
-import '../../widgets/filter_drawer.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class BuyerDashboard extends StatefulWidget {
@@ -16,13 +15,12 @@ class BuyerDashboard extends StatefulWidget {
 class _BuyerDashboardState extends State<BuyerDashboard> {
   final ProductService _productService = ProductService();
   String _searchQuery = '';
-  Map<String, dynamic> _filters = {};
-  
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Catchy'),
@@ -33,22 +31,15 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
           ),
         ],
       ),
-      drawer: FilterDrawer(
-        onFilterChanged: (filters) {
-          setState(() {
-            _filters = filters;
-          });
-        },
-      ),
       endDrawer: Drawer(
         child: ListView(
           children: [
             UserAccountsDrawerHeader(
-              accountName: Text(authProvider.currentUser?.displayName ?? ''),
-              accountEmail: Text(authProvider.currentUser?.email ?? ''),
+              accountName: Text(authProvider.user?.displayName ?? ''),
+              accountEmail: Text(authProvider.user?.email ?? ''),
               currentAccountPicture: CircleAvatar(
                 child: Text(
-                  authProvider.currentUser?.displayName?[0].toUpperCase() ?? 'U',
+                  authProvider.user?.displayName?[0].toUpperCase() ?? 'U',
                 ),
               ),
             ),
@@ -80,7 +71,8 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
       ),
       body: Column(
         children: [
-          SearchBar(
+          CustomSearchBar(
+
             onChanged: (query) {
               setState(() {
                 _searchQuery = query;
@@ -88,23 +80,23 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
             },
           ),
           Expanded(
-            child: StreamBuilder<List<Product>>(
-              stream: _productService.getProducts(_filters),
+            child: StreamBuilder<List<ProductModel>>(
+              stream: _productService.getAvailableProducts(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(child: Text(l10n.errorLoadingProducts));
                 }
-                
+
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 }
-                
+
                 final products = snapshot.data!
                     .where((product) => product.name
                         .toLowerCase()
                         .contains(_searchQuery.toLowerCase()))
                     .toList();
-                
+
                 return GridView.builder(
                   padding: EdgeInsets.all(16),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -137,4 +129,3 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
       ),
     );
   }
-} 

@@ -4,11 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/product_service.dart';
-import '../../models/product.dart';
+import '../../models/product_model.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class EditProductScreen extends StatefulWidget {
-  final Product product;
+  final ProductModel product;
 
   const EditProductScreen({
     Key? key,
@@ -23,12 +23,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final _formKey = GlobalKey<FormState>();
   final _productService = ProductService();
   final _imagePicker = ImagePicker();
-  
+
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _priceController;
   late String _selectedCategory;
-  late bool _inStock;
   List<File> _newImages = [];
   List<String> _existingImages = [];
   bool _isLoading = false;
@@ -40,8 +39,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _descriptionController = TextEditingController(text: widget.product.description);
     _priceController = TextEditingController(text: widget.product.price.toString());
     _selectedCategory = widget.product.category;
-    _inStock = widget.product.inStock;
-    _existingImages = [widget.product.imageUrl];
+    _existingImages = widget.product.images;
   }
 
   @override
@@ -78,7 +76,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
         description: _descriptionController.text,
         price: double.parse(_priceController.text),
         category: _selectedCategory,
-        inStock: _inStock,
       );
 
       await _productService.updateProduct(
@@ -86,7 +83,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
         updatedProduct,
         _newImages.isEmpty ? null : _newImages,
       );
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.productUpdated)),
@@ -275,16 +272,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 }
               },
             ),
-            SizedBox(height: 16),
-
-            // In Stock Switch
-            SwitchListTile(
-              title: Text(l10n.inStock),
-              value: _inStock,
-              onChanged: (value) {
-                setState(() => _inStock = value);
-              },
-            ),
             SizedBox(height: 24),
 
             // Submit Button
@@ -303,4 +290,4 @@ class _EditProductScreenState extends State<EditProductScreen> {
       ),
     );
   }
-} 
+}

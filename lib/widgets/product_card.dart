@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/product.dart';
+import '../models/product_model.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ProductCard extends StatelessWidget {
-  final Product product;
+
+  final ProductModel product;
   final VoidCallback onTap;
 
   const ProductCard({
@@ -32,8 +33,7 @@ class ProductCard extends StatelessWidget {
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               child: AspectRatio(
                 aspectRatio: 1,
-                child: Image.network(
-                  product.imageUrl,
+                child: Image.network(                  product.images.first,,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
@@ -72,41 +72,7 @@ class ProductCard extends StatelessWidget {
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
-                      if (product.inStock)
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            l10n.inStock,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.white,
-                            ),
-                          ),
-                        )
-                      else
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            l10n.outOfStock,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                      ),,
                     ],
                   ),
                 ],
@@ -117,4 +83,3 @@ class ProductCard extends StatelessWidget {
       ),
     );
   }
-} 

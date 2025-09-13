@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum UserRole {
-  customer,
+  buyer,
   seller,
   delivery,
+  shipper,
   admin,
 }
 
@@ -11,14 +12,10 @@ class UserModel {
   final String id;
   final String email;
   final UserRole role;
-  final String? name;
+  final String name;
   final String? phone;
   final String? address;
-  final GeoPoint? location;
-  final String? bio;
-  final String? storeName;
-  final String? storeAddress;
-  final GeoPoint? storeLocation;
+  final String? companyName; // For sellers/delivery companies
   final String? profileImage;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -27,14 +24,10 @@ class UserModel {
     required this.id,
     required this.email,
     required this.role,
-    this.name,
+    required this.name,
     this.phone,
     this.address,
-    this.location,
-    this.bio,
-    this.storeName,
-    this.storeAddress,
-    this.storeLocation,
+    this.companyName,
     this.profileImage,
     required this.createdAt,
     this.updatedAt,
@@ -46,21 +39,17 @@ class UserModel {
       id: doc.id,
       email: data['email'] ?? '',
       role: UserRole.values.firstWhere(
-        (role) => role.toString() == data['role'],
-        orElse: () => UserRole.customer,
+        (role) => role.toString().split('.').last == data['role'],
+        orElse: () => UserRole.buyer,
       ),
-      name: data['name'],
+      name: data['name'] ?? '',
       phone: data['phone'],
       address: data['address'],
-      location: data['location'],
-      bio: data['bio'],
-      storeName: data['storeName'],
-      storeAddress: data['storeAddress'],
-      storeLocation: data['storeLocation'],
+      companyName: data['companyName'],
       profileImage: data['profileImage'],
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: data['updatedAt'] != null
-          ? (data['updatedAt'] as Timestamp).toDate()
+      createdAt: (data['created_at'] as Timestamp).toDate(),
+      updatedAt: data['updated_at'] != null
+          ? (data['updated_at'] as Timestamp).toDate()
           : null,
     );
   }
@@ -68,18 +57,14 @@ class UserModel {
   Map<String, dynamic> toFirestore() {
     return {
       'email': email,
-      'role': role.toString(),
+      'role': role.toString().split('.').last,
       'name': name,
       'phone': phone,
       'address': address,
-      'location': location,
-      'bio': bio,
-      'storeName': storeName,
-      'storeAddress': storeAddress,
-      'storeLocation': storeLocation,
+      'companyName': companyName,
       'profileImage': profileImage,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
+      'created_at': Timestamp.fromDate(createdAt),
+      'updated_at': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
     };
   }
 
@@ -90,11 +75,7 @@ class UserModel {
     String? name,
     String? phone,
     String? address,
-    GeoPoint? location,
-    String? bio,
-    String? storeName,
-    String? storeAddress,
-    GeoPoint? storeLocation,
+    String? companyName,
     String? profileImage,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -106,14 +87,10 @@ class UserModel {
       name: name ?? this.name,
       phone: phone ?? this.phone,
       address: address ?? this.address,
-      location: location ?? this.location,
-      bio: bio ?? this.bio,
-      storeName: storeName ?? this.storeName,
-      storeAddress: storeAddress ?? this.storeAddress,
-      storeLocation: storeLocation ?? this.storeLocation,
+      companyName: companyName ?? this.companyName,
       profileImage: profileImage ?? this.profileImage,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-} 
+}

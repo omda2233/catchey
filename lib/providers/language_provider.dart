@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LanguageProvider with ChangeNotifier {
   static const String _languageKey = 'language';
   final SharedPreferences _prefs;
   Locale _currentLocale;
 
-  LanguageProvider() : _prefs = SharedPreferences.getInstance() as SharedPreferences {
-    final savedLanguage = _prefs.getString(_languageKey);
-    _currentLocale = savedLanguage != null
+  LanguageProvider._(this._prefs, this._currentLocale);
+
+  static Future<LanguageProvider> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString(_languageKey);
+    final locale = savedLanguage != null
         ? Locale(savedLanguage)
         : const Locale('en'); // Default to English
+    return LanguageProvider._(prefs, locale);
   }
 
   Locale get currentLocale => _currentLocale;
@@ -29,4 +33,4 @@ class LanguageProvider with ChangeNotifier {
   void toggleLanguage() {
     setLocale(isEnglish ? const Locale('ar') : const Locale('en'));
   }
-} 
+}

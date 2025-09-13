@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/product_service.dart';
-import '../../models/product.dart';
+import '../../models/product_model.dart';
 import '../../widgets/product_card.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -13,12 +13,12 @@ class SellerDashboard extends StatefulWidget {
 
 class _SellerDashboardState extends State<SellerDashboard> {
   final ProductService _productService = ProductService();
-  
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.sellerDashboard),
@@ -33,11 +33,11 @@ class _SellerDashboardState extends State<SellerDashboard> {
         child: ListView(
           children: [
             UserAccountsDrawerHeader(
-              accountName: Text(authProvider.currentUser?.displayName ?? ''),
-              accountEmail: Text(authProvider.currentUser?.email ?? ''),
+              accountName: Text(authProvider.user?.displayName ?? ''),
+              accountEmail: Text(authProvider.user?.email ?? ''),
               currentAccountPicture: CircleAvatar(
                 child: Text(
-                  authProvider.currentUser?.displayName?[0].toUpperCase() ?? 'S',
+                  authProvider.user?.displayName?[0].toUpperCase() ?? 'S',
                 ),
               ),
             ),
@@ -72,19 +72,19 @@ class _SellerDashboardState extends State<SellerDashboard> {
           ],
         ),
       ),
-      body: StreamBuilder<List<Product>>(
-        stream: _productService.streamSellerProducts(authProvider.currentUser!.uid),
+      body: StreamBuilder<List<ProductModel>>(
+        stream: _productService.getProductsBySeller(authProvider.user!.uid),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text(l10n.errorLoadingProducts));
           }
-          
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
-          
+
           final products = snapshot.data!;
-          
+
           if (products.isEmpty) {
             return Center(
               child: Column(
@@ -110,7 +110,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
               ),
             );
           }
-          
+
           return GridView.builder(
             padding: EdgeInsets.all(16),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -162,7 +162,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
                             ],
                           ),
                         );
-                        
+
                         if (confirmed == true) {
                           await _productService.deleteProduct(product.id);
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -185,4 +185,4 @@ class _SellerDashboardState extends State<SellerDashboard> {
       ),
     );
   }
-} 
+}

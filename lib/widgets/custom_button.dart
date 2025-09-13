@@ -3,13 +3,17 @@ import '../utils/theme.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool isLoading;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   const CustomButton({
     required this.text,
     required this.onPressed,
     this.isLoading = false,
+    this.backgroundColor,
+    this.textColor,
     Key? key,
   }) : super(key: key);
 
@@ -19,7 +23,7 @@ class CustomButton extends StatelessWidget {
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          primary: goldGradientStart,
+          backgroundColor: backgroundColor ?? Theme.of(context).primaryColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(32),
           ),
@@ -31,15 +35,18 @@ class CustomButton extends StatelessWidget {
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(textColor ?? Colors.white),
                   strokeWidth: 2,
                 ),
               )
             : Text(
                 text,
-                style: TextStyle(fontSize: 18, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 18,
+                  color: textColor ?? Colors.white,
+                ),
               ),
       ),
     );
   }
-} 
+}

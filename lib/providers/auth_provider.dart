@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/cart_service.dart';
+import '../models/user_model.dart';
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
   final CartService _cartService = CartService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   User? _user;
-  UserRole _userRole = UserRole.customer;
+  UserRole _userRole = UserRole.buyer;
   bool _isLoading = false;
   String? _error;
 
@@ -28,7 +29,7 @@ class AuthProvider with ChangeNotifier {
   bool get isAdmin => _userRole == UserRole.admin;
   bool get isSeller => _userRole == UserRole.seller;
   bool get isDelivery => _userRole == UserRole.delivery;
-  bool get isCustomer => _userRole == UserRole.customer;
+  bool get isBuyer => _userRole == UserRole.buyer;
 
   Future<void> _init() async {
     _user = _authService.currentUser;
@@ -38,7 +39,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signUp(String email, String password) async {
+  Future<void> signUp(String email, String password, String name) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -47,9 +48,10 @@ class AuthProvider with ChangeNotifier {
       final userCredential = await _authService.signUpWithEmailAndPassword(
         email,
         password,
+        name,
       );
       _user = userCredential.user;
-      _userRole = UserRole.customer;
+      _userRole = UserRole.buyer;
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -86,7 +88,7 @@ class AuthProvider with ChangeNotifier {
     try {
       await _authService.signOut();
       _user = null;
-      _userRole = UserRole.customer;
+      _userRole = UserRole.buyer;
     } catch (e) {
       _error = e.toString();
     } finally {

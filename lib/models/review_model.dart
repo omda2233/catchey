@@ -85,4 +85,7 @@ class ReviewModel {
       images: images ?? this.images,
       isVerified: isVerified ?? this.isVerified,
       createdAt: createdAt ?? this.createdAt,
- 
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+}

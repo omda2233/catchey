@@ -100,5 +100,33 @@
   "orderAccepted": "تم قبول الطلب بنجاح",
   "orderRejected": "تم رفض الطلب",
   "orderShipped": "تم تحديث حالة الشحن",
-  "errorLoadingOrders": "خطأ في تحميل الطلبات"
-} 
+  "errorLoadingOrders": "خطأ في تحميل الطلبات",
+
+  "verifyEmail": "تحقق من بريدك الإلكتروني",
+
+  "otpSent": "تم إرسال رابط التحقق إلى عنوان بريدك الإلكتروني.",
+
+  "resendCode": "إعادة إرسال البريد الإلكتروني",
+
+  "back": "العودة إلى تسجيل الدخول",
+
+  "pleaseEnter": "الرجاء إدخال",
+
+  "invalidEmail": "الرجاء إدخال عنوان بريد إلكتروني صالح.",
+
+  "invalidPassword": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
+
+  "confirmPassword": "تأكيد كلمة المرور",
+
+  "passwordsDontMatch": "كلمتا المرور غير متطابقتين.",
+
+  "alreadyHaveAccount": "هل لديك حساب بالفعل؟",
+
+  "signIn": "تسجيل الدخول",
+
+  "dontHaveAccount": "ليس لديك حساب؟",
+
+  "register": "إنشاء حساب",
+
+  "resetPassword": "إعادة تعيين كلمة المرور"
+}

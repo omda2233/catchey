@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../providers/auth_provider.dart';
 import '../utils/theme.dart';
+import '../models/user_model.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,10 +20,31 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initializeApp() async {
-    // TODO: Add initialization logic (auth check, data loading, etc.)
     await Future.delayed(const Duration(seconds: 2));
+
     if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/login');
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.isAuthenticated) {
+        switch (authProvider.userRole) {
+          case UserRole.admin:
+            Navigator.of(context).pushReplacementNamed('/admin_dashboard');
+            break;
+          case UserRole.seller:
+            Navigator.of(context).pushReplacementNamed('/seller_dashboard');
+            break;
+          case UserRole.delivery:
+            Navigator.of(context).pushReplacementNamed('/delivery_dashboard');
+            break;
+          case UserRole.shipper:
+            Navigator.of(context).pushReplacementNamed('/shipper_dashboard');
+            break;
+          default:
+            Navigator.of(context).pushReplacementNamed('/buyer_dashboard');
+            break;
+        }
+      } else {
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
     }
   }
 
@@ -54,4 +78,4 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
   }
-} 
+}

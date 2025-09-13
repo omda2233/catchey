@@ -1,213 +1,157 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/product_model.dart';
 import '../models/cart_model.dart';
-import '../models/order_model.dart';
-import 'order_service.dart';
-import '../models/product.dart';
-import 'product_service.dart';
 
 class CartService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final OrderService _orderService = OrderService();
-  final ProductService _productService = ProductService();
   final String _collection = 'carts';
 
-  // Get user's cart
-  Future<CartModel> getCart(String userId) async {
-    try {
-      final doc = await _firestore.collection(_collection).doc(userId).get();
+  // Stream cart from Firestore
+  Stream<CartModel> streamCart(String userId) {
+    return _firestore.collection(_collection).doc(userId).snapshots().asyncMap((doc) async {
       if (!doc.exists) {
-        // Create new cart if doesn't exist
-        final newCart = CartModel(
-          userId: userId,
-          items: [],
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        await _firestore.collection(_collection).doc(userId).set(
-          newCart.toFirestore(),
-        );
-        return newCart;
+        return CartModel.empty(userId);
       }
-      return CartModel.fromFirestore(doc);
-    } catch (e) {
-      print('Error getting cart: $e');
-      rethrow;
-    }
+      final data = doc.data() as Map<String, dynamic>;
+      final itemsData = data['items'] as List<dynamic>? ?? [];
+      final productIds = itemsData.map((item) => item['productId'] as String).toList();
+
+      if (productIds.isEmpty) {
+        return CartModel.fromFirestore(doc, []);
+      }
+
+      final productsSnapshot = await _firestore
+          .collection('products')
+          .where(FieldPath.documentId, whereIn: productIds)
+          .get();
+
+      final products = productsSnapshot.docs.map((doc) => ProductModel.fromFirestore(doc)).toList();
+      return CartModel.fromFirestore(doc, products);
+    });
   }
 
-  // Add item to cart
-  Future<void> addToCart(String userId, Product product, {int quantity = 1}) async {
-    try {
-      final cart = await getCart(userId);
-      final updatedCart = cart.addItem(product, quantity: quantity);
-      await _firestore.collection(_collection).doc(userId).update(
-        updatedCart.toFirestore(),
-      );
-    } catch (e) {
-      print('Error adding to cart: $e');
-      rethrow;
-    }
+  // Add to cart
+  Future<void> addToCart(String userId, ProductModel product, {int quantity = 1}) async {
+    final docRef = _firestore.collection(_collection).doc(userId);
+    await _firestore.runTransaction((transaction) async {
+      final doc = await transaction.get(docRef);
+      if (!doc.exists) {
+        transaction.set(docRef, {
+          'items': [CartItem(product: product, quantity: quantity).toFirestore()],
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        final data = doc.data() as Map<String, dynamic>;
+        final items = (data['items'] as List<dynamic>)
+            .map((item) {
+              final product = ProductModel.fromFirestore(item['product']);
+              return CartItem.fromMap(item as Map<String, dynamic>, product);
+            })
+            .toList();
+
+        final existingIndex = items.indexWhere((item) => item.product.id == product.id);
+        if (existingIndex >= 0) {
+          items[existingIndex] = items[existingIndex].copyWith(
+            quantity: items[existingIndex].quantity + quantity,
+          );
+        } else {
+          items.add(CartItem(product: product, quantity: quantity));
+        }
+
+        transaction.update(docRef, {
+          'items': items.map((item) => item.toFirestore()).toList(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    });
   }
 
-  // Remove item from cart
+  // Remove from cart
   Future<void> removeFromCart(String userId, String productId) async {
-    try {
-      final cart = await getCart(userId);
-      final updatedCart = cart.removeItem(productId);
-      await _firestore.collection(_collection).doc(userId).update(
-        updatedCart.toFirestore(),
-      );
-    } catch (e) {
-      print('Error removing from cart: $e');
-      rethrow;
-    }
+    final docRef = _firestore.collection(_collection).doc(userId);
+    await docRef.update({
+      'items': FieldValue.arrayRemove([{'productId': productId}]),
+    });
   }
 
-  // Update item quantity
-  Future<void> updateItemQuantity(
-    String userId,
-    String productId,
-    int quantity,
-  ) async {
+  // Update quantity
+  Future<void> updateQuantity(String userId, String productId, int quantity) async {
+    if (quantity <= 0) {
+      await removeFromCart(userId, productId);
+      return;
+    }
+
+    final docRef = _firestore.collection(_collection).doc(userId);
+    await _firestore.runTransaction((transaction) async {
+      final doc = await transaction.get(docRef);
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        final items = (data['items'] as List<dynamic>)
+            .map((item) {
+              final product = ProductModel.fromFirestore(item['product']);
+              return CartItem.fromMap(item as Map<String, dynamic>, product);
+            })
+            .toList();
+
+        final existingIndex = items.indexWhere((item) => item.product.id == productId);
+        if (existingIndex >= 0) {
+          items[existingIndex] = items[existingIndex].copyWith(quantity: quantity);
+          transaction.update(docRef, {
+            'items': items.map((item) => item.toFirestore()).toList(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+    });
+  }
+
+  // Merge anonymous cart with user cart
+  Future<void> mergeAnonymousCart(String anonymousUserId, String userId) async {
     try {
-      final cart = await getCart(userId);
-      final updatedCart = cart.updateItemQuantity(productId, quantity);
-      await _firestore.collection(_collection).doc(userId).update(
-        updatedCart.toFirestore(),
-      );
+      final anonymousCartSnapshot = await _firestore.collection(_collection).doc(anonymousUserId).get();
+      final userCartSnapshot = await _firestore.collection(_collection).doc(userId).get();
+
+      if (!anonymousCartSnapshot.exists) return;
+
+      final products = <ProductModel>[];
+      final anonymousCart = CartModel.fromFirestore(anonymousCartSnapshot, products);
+      final userCart = userCartSnapshot.exists
+          ? CartModel.fromFirestore(userCartSnapshot, products)
+          : CartModel.empty(userId);
+
+      final mergedItems = <String, CartItem>{};
+
+      for (final item in userCart.items) {
+        mergedItems[item.product.id] = item;
+      }
+
+      for (final item in anonymousCart.items) {
+        if (mergedItems.containsKey(item.product.id)) {
+          mergedItems[item.product.id] = mergedItems[item.product.id]!.copyWith(
+            quantity: mergedItems[item.product.id]!.quantity + item.quantity,
+          );
+        } else {
+          mergedItems[item.product.id] = item;
+        }
+      }
+
+      await _firestore.collection(_collection).doc(userId).set({
+        'items': mergedItems.values.map((item) => item.toFirestore()).toList(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await _firestore.collection(_collection).doc(anonymousUserId).delete();
     } catch (e) {
-      print('Error updating item quantity: $e');
-      rethrow;
+      print('Error merging cart: $e');
     }
   }
 
   // Clear cart
   Future<void> clearCart(String userId) async {
     try {
-      final cart = await getCart(userId);
-      final updatedCart = cart.clear();
-      await _firestore.collection(_collection).doc(userId).update(
-        updatedCart.toFirestore(),
-      );
+      await _firestore.collection(_collection).doc(userId).delete();
     } catch (e) {
       print('Error clearing cart: $e');
-      rethrow;
     }
   }
-
-  // Checkout cart
-  Future<OrderModel> checkout(
-    String userId,
-    String customerName,
-    String customerEmail,
-    String? customerPhone,
-    DeliveryMethod deliveryMethod,
-    String? deliveryAddress,
-    GeoPoint? deliveryLocation,
-    String? notes,
-  ) async {
-    try {
-      final cart = await getCart(userId);
-      if (cart.items.isEmpty) {
-        throw 'Cart is empty';
-      }
-
-      // Group items by seller
-      final itemsBySeller = cart.itemsBySeller;
-      final orders = <OrderModel>[];
-
-      // Create an order for each seller
-      for (final entry in itemsBySeller.entries) {
-        final sellerId = entry.key;
-        final items = entry.value;
-
-        // Get seller details from first item
-        final sellerName = items.first.sellerName;
-        final sellerAddress = items.first.sellerAddress;
-        final sellerLocation = items.first.sellerLocation;
-
-        // Create order
-        final order = await _orderService.createOrder(
-          OrderModel(
-            id: '', // Will be set by Firestore
-            customerId: userId,
-            customerName: customerName,
-            customerEmail: customerEmail,
-            customerPhone: customerPhone,
-            sellerId: sellerId,
-            sellerName: sellerName,
-            sellerAddress: sellerAddress,
-            sellerLocation: sellerLocation,
-            items: items.map((item) => OrderItem(
-              productId: item.productId,
-              productName: item.productName,
-              price: item.price,
-              quantity: item.quantity,
-              image: item.image,
-            )).toList(),
-            deliveryMethod: deliveryMethod,
-            deliveryAddress: deliveryAddress,
-            deliveryLocation: deliveryLocation,
-            notes: notes,
-            requiresDeposit: deliveryMethod == DeliveryMethod.pickup,
-            depositAmount: deliveryMethod == DeliveryMethod.pickup
-                ? items.fold(0.0, (sum, item) => sum + (item.price * item.quantity)) * 0.2
-                : null,
-            isDepositPaid: false,
-            status: OrderStatus.pending,
-            createdAt: DateTime.now(),
-          ),
-        );
-
-        orders.add(order);
-      }
-
-      // Clear cart after successful checkout
-      await clearCart(userId);
-
-      // Return the first order (main order)
-      return orders.first;
-    } catch (e) {
-      print('Error during checkout: $e');
-      rethrow;
-    }
-  }
-
-  // Stream cart updates
-  Stream<CartModel> streamCart(String userId) {
-    return _firestore
-        .collection(_collection)
-        .doc(userId)
-        .snapshots()
-        .map((doc) => CartModel.fromFirestore(doc));
-  }
-
-  Future<void> updateCart(Cart cart) async {
-    await _firestore
-        .collection(_collection)
-        .doc(cart.userId)
-        .set(cart.toFirestore());
-  }
-
-  Future<void> updateQuantity(
-      String userId, String productId, int quantity) async {
-    final cart = await getCart(userId);
-    final updatedCart = cart.updateQuantity(productId, quantity);
-    await updateCart(updatedCart);
-  }
-
-  Future<void> mergeAnonymousCart(String anonymousUserId, String userId) async {
-    final anonymousCart = await getCart(anonymousUserId);
-    final userCart = await getCart(userId);
-
-    // Merge items from anonymous cart into user cart
-    Cart mergedCart = userCart;
-    for (final item in anonymousCart.items) {
-      mergedCart = mergedCart.addItem(item.product, quantity: item.quantity);
-    }
-
-    // Update user's cart and delete anonymous cart
-    await updateCart(mergedCart);
-    await _firestore.collection(_collection).doc(anonymousUserId).delete();
-  }
-} 
+}

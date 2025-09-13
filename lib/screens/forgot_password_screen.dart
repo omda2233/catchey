@@ -120,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : Text(l10n.reset),
+                        : Text(l10n.resetPassword),
                   ),
                   const SizedBox(height: 16),
                   TextButton(
@@ -137,4 +137,4 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
     );
   }
-} 
+}

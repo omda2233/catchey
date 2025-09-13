@@ -6,14 +6,18 @@ class ThemeProvider with ChangeNotifier {
   final SharedPreferences _prefs;
   ThemeMode _themeMode;
 
-  ThemeProvider() : _prefs = SharedPreferences.getInstance() as SharedPreferences {
-    final savedTheme = _prefs.getString(_themeKey);
-    _themeMode = savedTheme != null
+  ThemeProvider._(this._prefs, this._themeMode);
+
+  static Future<ThemeProvider> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedTheme = prefs.getString(_themeKey);
+    final themeMode = savedTheme != null
         ? ThemeMode.values.firstWhere(
             (mode) => mode.toString() == savedTheme,
             orElse: () => ThemeMode.system,
           )
         : ThemeMode.system;
+    return ThemeProvider._(prefs, themeMode);
   }
 
   ThemeMode get themeMode => _themeMode;
@@ -34,4 +38,4 @@ class ThemeProvider with ChangeNotifier {
   void toggleTheme() {
     setThemeMode(isDarkMode ? ThemeMode.light : ThemeMode.dark);
   }
-} 
+}

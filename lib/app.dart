@@ -6,6 +6,7 @@ import 'providers/language_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
+import 'models/product_model.dart';
 import 'utils/theme.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
@@ -17,7 +18,10 @@ import 'screens/seller/add_product_screen.dart';
 import 'screens/seller/edit_product_screen.dart';
 import 'screens/seller/seller_orders_screen.dart';
 import 'screens/shipper/shipper_dashboard.dart';
+import 'screens/delivery/delivery_dashboard.dart';
 import 'screens/admin/admin_dashboard.dart';
+import 'screens/payment_screen.dart';
+import 'screens/checkout_screen.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -29,7 +33,10 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, CartProvider>(
+          create: (_) => CartProvider(),
+          update: (context, auth, previous) => previous!..init(auth.user?.uid),
+        ),
       ],
       child: Consumer3<LanguageProvider, ThemeProvider, AuthProvider>(
         builder: (context, languageProvider, themeProvider, authProvider, _) {
@@ -52,16 +59,26 @@ class App extends StatelessWidget {
               '/seller_dashboard': (_) => SellerDashboard(),
               '/add_product': (_) => AddProductScreen(),
               '/edit_product': (context) {
-                final product = ModalRoute.of(context)!.settings.arguments as Product;
+                final product = ModalRoute.of(context)!.settings.arguments as ProductModel;
                 return EditProductScreen(product: product);
               },
               '/seller_orders': (_) => SellerOrdersScreen(),
               '/shipper_dashboard': (_) => ShipperDashboard(),
+              '/delivery_dashboard': (_) => DeliveryDashboard(),
               '/admin_dashboard': (_) => AdminDashboard(),
+              '/checkout': (_) => CheckoutScreen(),
+              '/payment': (context) {
+                final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+                return PaymentScreen(
+                  amount: args['amount'],
+                  orderId: args['orderId'],
+                  sellerId: args['sellerId'],
+                );
+              },
             },
           );
         },
       ),
     );
   }
-} 
+}

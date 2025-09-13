@@ -14,6 +14,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -22,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -34,6 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await authProvider.signUp(
         _emailController.text.trim(),
         _passwordController.text,
+        _nameController.text.trim(),
       );
 
       if (authProvider.error != null) {
@@ -71,7 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    l10n.signUp,
+                    l10n.signup,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: AppTheme.primaryColor,
                           fontWeight: FontWeight.bold,
@@ -79,6 +82,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: l10n.name,
+                      prefixIcon: const Icon(Icons.person_outline),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.pleaseEnter + ' ' + l10n.name.toLowerCase();
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -178,7 +198,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : Text(l10n.signUp),
+                        : Text(l10n.signup),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -201,4 +221,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-} 
+}

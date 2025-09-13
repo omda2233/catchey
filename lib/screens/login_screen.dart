@@ -44,21 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       } else if (mounted) {
-        // Navigate based on user role
-        switch (authProvider.userRole) {
-          case UserRole.admin:
-            Navigator.pushReplacementNamed(context, '/admin_dashboard');
-            break;
-          case UserRole.seller:
-            Navigator.pushReplacementNamed(context, '/seller_dashboard');
-            break;
-          case UserRole.delivery:
-            Navigator.pushReplacementNamed(context, '/delivery_dashboard');
-            break;
-          case UserRole.customer:
-            Navigator.pushReplacementNamed(context, '/customer_dashboard');
-            break;
-        }
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
       }
     }
   }
@@ -178,9 +164,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text(l10n.dontHaveAccount),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/register');
+                          Navigator.pushNamed(context, '/signup');
                         },
-                        child: Text(l10n.signUp),
+                        child: Text(l10n.signup),
                       ),
                     ],
                   ),
@@ -192,4 +178,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-} 
+}

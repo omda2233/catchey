@@ -1,0 +1,72 @@
+@echo off
+REM Catchy Fabric Market - Flutter App Setup Script
+REM This script helps you set up and run the Flutter mobile application
+
+echo 🎯 Catchy Fabric Market - Flutter App Setup
+echo =============================================
+
+REM Check if Flutter is installed
+flutter --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ❌ Flutter is not installed. Please install Flutter first:
+    echo    https://flutter.dev/docs/get-started/install
+    pause
+    exit /b 1
+)
+
+echo ✅ Flutter is installed
+
+REM Get dependencies
+echo 📦 Installing dependencies...
+flutter pub get
+
+if %errorlevel% equ 0 (
+    echo ✅ Dependencies installed successfully
+) else (
+    echo ❌ Failed to install dependencies
+    pause
+    exit /b 1
+)
+
+REM Check Firebase configuration
+echo 🔥 Checking Firebase configuration...
+
+if exist "android\app\google-services.json" (
+    echo ✅ Android Firebase config found
+) else (
+    echo ❌ android\app\google-services.json not found
+    echo    Please ensure your Firebase configuration file is in place
+)
+
+if exist "ios\Runner\GoogleService-Info.plist" (
+    echo ✅ iOS Firebase config found
+) else (
+    echo ❌ ios\Runner\GoogleService-Info.plist not found
+    echo    Please ensure your Firebase configuration file is in place
+)
+
+REM Check for connected devices
+echo 📱 Checking for connected devices...
+flutter devices
+
+echo.
+echo 🚀 Setup complete! You can now run the app with:
+echo.
+echo    flutter run                    # Run on connected device
+echo    flutter run -d android         # Run on Android
+echo    flutter run -d ios             # Run on iOS
+echo.
+echo 📱 Test Credentials:
+echo    Admin:  admin@catchyfabric.com / Admin123!
+echo    Buyer:  buyer@catchyfabric.com / Buyer123!
+echo    Seller: seller@catchyfabric.com / Seller123!
+echo    Delivery: delivery@catchyfabric.com / Delivery123!
+echo.
+echo 💳 Test Payment Data:
+echo    Visa: 4111111111111111
+echo    MasterCard: 5555555555554444
+echo    Expiry: 12/34, CVV: 123
+echo    Instapay: 01112223334
+echo.
+echo 🎯 Happy coding!
+pause

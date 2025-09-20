@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 import '../utils/theme.dart';
+import '../services/biometric_auth_service.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -17,13 +18,43 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final BiometricAuthService _biometricAuth = BiometricAuthService();
   bool _obscurePassword = true;
+  bool _biometricAvailable = false;
 
   @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _checkBiometricAvailability();
+  }
+
+  Future<void> _checkBiometricAvailability() async {
+    final isAvailable = await _biometricAuth.isBiometricAvailable();
+    setState(() {
+      _biometricAvailable = isAvailable;
+    });
+  }
+
+  Future<void> _loginWithBiometric() async {
+    final isAuthenticated = await _biometricAuth.authenticate();
+    if (isAuthenticated) {
+      // For demo purposes, use test credentials
+      final authProvider = context.read<AuthProvider>();
+      await authProvider.signIn('buyer@catchyfabric.com', 'Buyer123!');
+      
+      if (authProvider.error != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authProvider.error!),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
+      }
+    }
   }
 
   Future<void> _login() async {
@@ -157,6 +188,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           )
                         : Text(l10n.login),
                   ),
+                  if (_biometricAvailable) ...[
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: authProvider.isLoading ? null : _loginWithBiometric,
+                      icon: const Icon(Icons.fingerprint),
+                      label: const Text('Login with Biometric'),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

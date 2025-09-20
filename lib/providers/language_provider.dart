@@ -3,10 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LanguageProvider with ChangeNotifier {
   static const String _languageKey = 'language';
-  final SharedPreferences _prefs;
+  final SharedPreferences? _prefs;
   Locale _currentLocale;
 
-  LanguageProvider._(this._prefs, this._currentLocale);
+  LanguageProvider(this._prefs, this._currentLocale);
 
   static Future<LanguageProvider> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -14,7 +14,7 @@ class LanguageProvider with ChangeNotifier {
     final locale = savedLanguage != null
         ? Locale(savedLanguage)
         : const Locale('en'); // Default to English
-    return LanguageProvider._(prefs, locale);
+    return LanguageProvider(prefs, locale);
   }
 
   Locale get currentLocale => _currentLocale;
@@ -23,7 +23,7 @@ class LanguageProvider with ChangeNotifier {
     if (_currentLocale == locale) return;
 
     _currentLocale = locale;
-    await _prefs.setString(_languageKey, locale.languageCode);
+    await _prefs?.setString(_languageKey, locale.languageCode);
     notifyListeners();
   }
 

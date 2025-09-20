@@ -45,6 +45,9 @@ dependencies:
   # Notifications
   flutter_local_notifications: ^19.4.1
   
+  # Biometric authentication
+  local_auth: ^2.1.7
+  
   # HTTP requests
   http: ^1.1.0
   

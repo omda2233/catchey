@@ -56,10 +56,23 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/images/catchy_logo.png',
+            Container(
               width: 200,
               height: 200,
+              decoration: BoxDecoration(
+                color: AppTheme.accentColor,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  'C',
+                  style: TextStyle(
+                    fontSize: 80,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 24),
             Text(

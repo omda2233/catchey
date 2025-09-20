@@ -33,7 +33,8 @@ class ProductCard extends StatelessWidget {
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               child: AspectRatio(
                 aspectRatio: 1,
-                child: Image.network(                  product.images.first,,
+                child: Image.network(
+                  product.images.first,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
@@ -72,7 +73,7 @@ class ProductCard extends StatelessWidget {
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
-                      ),,
+                      ),
                     ],
                   ),
                 ],

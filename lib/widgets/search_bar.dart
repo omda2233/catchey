@@ -4,7 +4,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 class CustomSearchBar extends StatelessWidget {
   final void Function(String) onChanged;
 
-  const SearchBar({
+  const CustomSearchBar({
     Key? key,
     required this.onChanged,
   }) : super(key: key);

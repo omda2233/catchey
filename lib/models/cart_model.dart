@@ -144,3 +144,9 @@ class CartModel {
         if (item.product.id == productId) {
           return item.copyWith(quantity: quantity);
         }
+        return item;
+      }).toList(),
+      updatedAt: DateTime.now(),
+    );
+  }
+}

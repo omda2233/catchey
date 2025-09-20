@@ -39,7 +39,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signUp(String email, String password, String name) async {
+  Future<void> signup(String email, String password, String name) async {
     _isLoading = true;
     _error = null;
     notifyListeners();

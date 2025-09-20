@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import '../providers/auth_provider.dart';
+import '../providers/auth_provider.dart' as app_auth;
 import '../utils/theme.dart';
 import '../models/user_model.dart';
 
@@ -28,7 +28,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       if (user?.emailVerified ?? false) {
         timer.cancel();
         if (mounted) {
-          final authProvider = context.read<AuthProvider>();
+          final authProvider = context.read<app_auth.AuthProvider>();
           // Navigate based on user role
           switch (authProvider.userRole) {
             case UserRole.admin:
@@ -64,7 +64,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       _isResending = true;
     });
 
-    final authProvider = context.read<AuthProvider>();
+    final authProvider = context.read<app_auth.AuthProvider>();
     await authProvider.resendVerificationEmail();
 
     if (mounted) {
@@ -134,7 +134,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  context.read<AuthProvider>().signOut();
+                  context.read<app_auth.AuthProvider>().signOut();
                   Navigator.of(context).pushNamedAndRemoveUntil(
                     '/login',
                     (route) => false,

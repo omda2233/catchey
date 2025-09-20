@@ -36,12 +36,6 @@ class AuthService {
   ) async {
     try {
       // Check if email already exists
-      final list = await _auth.fetchSignInMethodsForEmail(email);
-      if (list.isNotEmpty) {
-        throw 'Email already exists';
-      }
-
-      // Create user
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,

@@ -3,6 +3,8 @@ plugins {
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
     id "com.google.gms.google-services"
+    // Add Crashlytics plugin
+    id "com.google.firebase.crashlytics"
 }
 
 def localProperties = new Properties()
@@ -58,7 +60,8 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            // Switch to release signing (placeholder)
+            // signingConfig signingConfigs.debug
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -73,5 +76,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation platform('com.google.firebase:firebase-bom:32.7.0')
     implementation 'com.google.firebase:firebase-analytics'
-    implementation 'com.android.support:multidex:1.0.3'
+    // Add Crashlytics dependency
+    implementation 'com.google.firebase:firebase-crashlytics'
+    // Use AndroidX MultiDex
+    implementation 'androidx.multidex:multidex:2.0.1'
 }

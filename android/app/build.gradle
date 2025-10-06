@@ -7,6 +7,15 @@ plugins {
     id "com.google.firebase.crashlytics"
 }
 
+// Load keystore properties for release signing (if present)
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withReader('UTF-8') { reader ->
+        keystoreProperties.load(reader)
+    }
+}
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -58,10 +67,23 @@ android {
         multiDexEnabled true
     }
 
+    signingConfigs {
+        if (keystoreProperties.containsKey('keyAlias')) {
+            release {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // Switch to release signing (placeholder)
-            // signingConfig signingConfigs.debug
+            // Use release signing if configured
+            if (keystoreProperties.containsKey('keyAlias')) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

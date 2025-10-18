@@ -13,12 +13,10 @@ class ShipperDashboard extends StatefulWidget {
 class _ShipperDashboardState extends State<ShipperDashboard> {
   final OrderService _orderService = OrderService();
   bool _isLoading = false;
-  String? _error;
 
   Future<void> _updateOrderStatus(String orderId, OrderStatus newStatus) async {
     setState(() {
       _isLoading = true;
-      _error = null;
     });
 
     try {
@@ -36,9 +34,14 @@ class _ShipperDashboardState extends State<ShipperDashboard> {
         );
       }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -145,10 +148,10 @@ class _ShipperDashboardState extends State<ShipperDashboard> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(order.status).withOpacity(0.1),
+                    color: _getStatusColor(order.status).withAlpha(26), // 0.1 opacity equivalent
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _getStatusColor(order.status).withOpacity(0.3),
+                      color: _getStatusColor(order.status).withAlpha(77), // 0.3 opacity equivalent
                     ),
                   ),
                   child: Text(

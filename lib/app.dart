@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/language_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
@@ -32,57 +32,55 @@ class App extends StatelessWidget {
       providers: [
         FutureProvider<LanguageProvider>(
           create: (_) => LanguageProvider.init(),
+          initialData: LanguageProvider(null, const Locale('en')),
         ),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        FutureProvider<ThemeProvider>(
+          create: (_) => ThemeProvider.init(),
+          initialData: ThemeProvider.initial(),
+        ),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProxyProvider<AuthProvider, CartProvider>(
           create: (_) => CartProvider(),
           update: (context, auth, previous) => previous!..init(auth.user?.uid ?? ''),
         ),
       ],
-      child: Consumer2<ThemeProvider, AuthProvider>(
-        builder: (context, themeProvider, authProvider, _) {
-          return FutureBuilder<LanguageProvider>(
-            future: LanguageProvider.init(),
-            builder: (context, snapshot) {
-              final languageProvider = snapshot.data ?? LanguageProvider(null, const Locale('en'));
-              return MaterialApp(
-                title: 'Catchey',
-                debugShowCheckedModeBanner: false,
-                theme: AppTheme.lightTheme,
-                darkTheme: AppTheme.darkTheme,
-                themeMode: themeProvider.themeMode,
-                locale: languageProvider.currentLocale,
-                localizationsDelegates: AppLocalizations.localizationsDelegates,
-                supportedLocales: AppLocalizations.supportedLocales,
-                home: const SplashScreen(),
-                routes: {
-                  '/': (_) => SplashScreen(),
-                  '/login': (_) => LoginScreen(),
-                  '/signup': (_) => SignupScreen(),
-                  '/cart': (_) => CartScreen(),
-                  '/buyer_dashboard': (_) => BuyerDashboard(),
-                  '/seller_dashboard': (_) => SellerDashboard(),
-                  '/add_product': (_) => AddProductScreen(),
-                  '/edit_product': (context) {
-                    final product = ModalRoute.of(context)!.settings.arguments as ProductModel;
-                    return EditProductScreen(product: product);
-                  },
-                  '/seller_orders': (_) => SellerOrdersScreen(),
-                  '/shipper_dashboard': (_) => ShipperDashboard(),
-                  '/delivery_dashboard': (_) => DeliveryDashboard(),
-                  '/admin_dashboard': (_) => AdminDashboard(),
-                  '/checkout': (_) => CheckoutScreen(),
-                  '/payment': (context) {
-                    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-                    return PaymentScreen(
-                      amount: args['amount'],
-                      orderId: args['orderId'],
-                      sellerId: args['sellerId'],
-                    );
-                  },
-                },
-              );
+      child: Consumer2<LanguageProvider, ThemeProvider>(
+        builder: (context, languageProvider, themeProvider, _) {
+          return MaterialApp(
+            title: 'Catchey',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            locale: languageProvider.currentLocale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: SplashScreen(),
+            routes: {
+              '/': (_) => SplashScreen(),
+              '/login': (_) => LoginScreen(),
+              '/signup': (_) => SignupScreen(),
+              '/cart': (_) => CartScreen(),
+              '/buyer_dashboard': (_) => BuyerDashboard(),
+              '/seller_dashboard': (_) => SellerDashboard(),
+              '/add_product': (_) => AddProductScreen(),
+              '/edit_product': (context) {
+                final product = ModalRoute.of(context)!.settings.arguments as ProductModel;
+                return EditProductScreen(product: product);
+              },
+              '/seller_orders': (_) => SellerOrdersScreen(),
+              '/shipper_dashboard': (_) => ShipperDashboard(),
+              '/delivery_dashboard': (_) => DeliveryDashboard(),
+              '/admin_dashboard': (_) => AdminDashboard(),
+              '/checkout': (_) => CheckoutScreen(),
+              '/payment': (context) {
+                final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+                return PaymentScreen(
+                  amount: args['amount'],
+                  orderId: args['orderId'],
+                  sellerId: args['sellerId'],
+                );
+              },
             },
           );
         },

@@ -1,5 +1,6 @@
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:local_auth_android/local_auth_android.dart';
 
 class BiometricAuthService {
   final LocalAuthentication _localAuth = LocalAuthentication();
@@ -26,29 +27,26 @@ class BiometricAuthService {
 
   // Authenticate with biometrics
   Future<bool> authenticate({
-    String? localizedFallbackTitle,
+    required String localizedReason,
     String? cancelButton,
   }) async {
     try {
       final isAvailable = await isBiometricAvailable();
       if (!isAvailable) return false;
-
+      
       final result = await _localAuth.authenticate(
-        localizedFallbackTitle: localizedFallbackTitle ?? 'Use PIN',
-        authMessages: const [
+        localizedReason: localizedReason,
+        authMessages: [
           AndroidAuthMessages(
             signInTitle: 'Biometric Authentication',
-            cancelButton: 'Cancel',
+            cancelButton: cancelButton ?? 'Cancel',
+            biometricHint: 'Verify your identity',
+            biometricNotRecognized: 'Authentication failed. Try again.',
+            biometricRequiredTitle: 'Biometric required',
             deviceCredentialsRequiredTitle: 'Device credentials required',
             deviceCredentialsSetupDescription: 'Device credentials are not set up on your device. Go to \'Settings > Security\' to set up a screen lock.',
             goToSettingsButton: 'Go to settings',
             goToSettingsDescription: 'Please set up your screen lock.',
-          ),
-          IOSAuthMessages(
-            cancelButton: 'Cancel',
-            goToSettingsButton: 'Go to settings',
-            goToSettingsDescription: 'Please set up Touch ID.',
-            lockOut: 'Please reenable your Touch ID',
           ),
         ],
       );

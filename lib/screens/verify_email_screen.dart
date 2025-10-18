@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../providers/auth_provider.dart' as app_auth;
-import '../utils/theme.dart';
 import '../models/user_model.dart';
 
 class VerifyEmailScreen extends StatefulWidget {

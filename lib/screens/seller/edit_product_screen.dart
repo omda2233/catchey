@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../providers/auth_provider.dart';
 import '../../services/product_service.dart';
 import '../../models/product_model.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -52,11 +50,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   Future<void> _pickImages() async {
     final pickedFiles = await _imagePicker.pickMultiImage();
-    if (pickedFiles != null) {
-      setState(() {
-        _newImages.addAll(pickedFiles.map((file) => File(file.path)));
-      });
-    }
+    setState(() {
+      _newImages.addAll(pickedFiles.map((file) => File(file.path)));
+    });
   }
 
   Future<void> _submitForm() async {

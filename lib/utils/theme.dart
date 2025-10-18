@@ -17,7 +17,7 @@ class AppTheme {
       primary: primaryColor,
       secondary: accentColor,
       surface: surfaceColor,
-      background: backgroundColor,
+      surfaceContainerLowest: backgroundColor,
     ),
     textTheme: GoogleFonts.cairoTextTheme(ThemeData.light().textTheme),
     appBarTheme: AppBarTheme(
@@ -88,7 +88,7 @@ class AppTheme {
       primary: primaryColor,
       secondary: accentColor,
       surface: secondaryColor,
-      background: primaryColor,
+      surfaceContainerLowest: primaryColor,
     ),
     textTheme: GoogleFonts.cairoTextTheme(ThemeData.dark().textTheme),
     appBarTheme: AppBarTheme(
@@ -148,4 +148,4 @@ class AppTheme {
       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
   );
-} 
+}

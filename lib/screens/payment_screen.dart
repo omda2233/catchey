@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/payment_service.dart';
-import '../models/transaction_model.dart';
 import '../widgets/custom_button.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class PaymentScreen extends StatefulWidget {
   final double amount;
@@ -147,7 +145,6 @@ class _PaymentScreenState extends State<PaymentScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -169,9 +166,9 @@ class _PaymentScreenState extends State<PaymentScreen>
             padding: EdgeInsets.all(16),
             margin: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
+              color: theme.primaryColor.withAlpha(26),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.primaryColor.withOpacity(0.3)),
+              border: Border.all(color: theme.primaryColor.withAlpha(77)),
             ),
             child: Column(
               children: [
@@ -198,9 +195,9 @@ class _PaymentScreenState extends State<PaymentScreen>
               margin: EdgeInsets.symmetric(horizontal: 16),
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withAlpha(26),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                border: Border.all(color: Colors.red.withAlpha(77)),
               ),
               child: Text(
                 _error!,

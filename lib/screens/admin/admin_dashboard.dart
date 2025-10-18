@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../providers/auth_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/order_service.dart';
 import '../../models/user_model.dart';
@@ -91,12 +89,12 @@ class _AdminDashboardState extends State<AdminDashboard>
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
     final authProvider = Provider.of<AuthProvider>(context);
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
         title: Text('Admin Dashboard'),
         bottom: TabBar(
           controller: _tabController,

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/order_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
-import '../../models/order_model.dart';
 import '../../widgets/custom_button.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SellerOrdersScreen extends StatefulWidget {
   @override
@@ -66,7 +65,6 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen>
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
@@ -92,9 +90,9 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen>
               margin: EdgeInsets.all(16),
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withAlpha(26), // 0.1 opacity equivalent
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                border: Border.all(color: Colors.red.withAlpha(77)), // 0.3 opacity equivalent
               ),
               child: Text(
                 _error!,
@@ -191,10 +189,10 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen>
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(order.status).withOpacity(0.1),
+                    color: _getStatusColor(order.status).withAlpha(26), // 0.1 opacity equivalent
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _getStatusColor(order.status).withOpacity(0.3),
+                      color: _getStatusColor(order.status).withAlpha(77), // 0.3 opacity equivalent
                     ),
                   ),
                   child: Text(

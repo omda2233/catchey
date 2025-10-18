@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../models/review_model.dart';
-import '../models/product_model.dart';
 
 class ReviewService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -202,4 +201,4 @@ class ReviewService {
       rethrow;
     }
   }
-} 
+}

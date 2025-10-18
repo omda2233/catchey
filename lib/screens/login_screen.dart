@@ -4,8 +4,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 import '../utils/theme.dart';
 import '../services/biometric_auth_service.dart';
-import 'register_screen.dart';
-import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,7 +34,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _loginWithBiometric() async {
-    final isAuthenticated = await _biometricAuth.authenticate();
+    final isAuthenticated = await _biometricAuth.authenticate(
+      localizedReason: 'Authenticate to access your account',
+    );
     if (isAuthenticated) {
       // For demo purposes, use test credentials
       final authProvider = context.read<AuthProvider>();

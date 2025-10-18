@@ -3,6 +3,14 @@ import 'package:flutter/material.dart';
 import '../models/order_model.dart';
 import '../services/order_service.dart';
 
+// Define UserRole enum
+enum UserRole {
+  admin,
+  seller,
+  buyer,
+  delivery
+}
+
 class OrderProvider with ChangeNotifier {
   final OrderService _orderService = OrderService();
   List<OrderModel> _orders = [];

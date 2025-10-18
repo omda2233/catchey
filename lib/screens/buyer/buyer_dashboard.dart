@@ -129,3 +129,4 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
       ),
     );
   }
+}

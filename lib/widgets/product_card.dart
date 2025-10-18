@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ProductCard extends StatelessWidget {
-
   final ProductModel product;
   final VoidCallback onTap;
 
@@ -15,7 +13,6 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Card(
@@ -84,3 +81,4 @@ class ProductCard extends StatelessWidget {
       ),
     );
   }
+}

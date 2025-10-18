@@ -129,50 +129,6 @@ class _SellerDashboardState extends State<SellerDashboard> {
                   '/edit_product',
                   arguments: product,
                 ),
-                trailing: PopupMenuButton(
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      child: Text(l10n.edit),
-                      onTap: () => Navigator.pushNamed(
-                        context,
-                        '/edit_product',
-                        arguments: product,
-                      ),
-                    ),
-                    PopupMenuItem(
-                      child: Text(l10n.delete),
-                      onTap: () async {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(l10n.deleteProduct),
-                            content: Text(l10n.deleteProductConfirmation),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(l10n.cancel),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(
-                                  l10n.delete,
-                                  style: TextStyle(color: Colors.red),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-
-                        if (confirmed == true) {
-                          await _productService.deleteProduct(product.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.productDeleted)),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
               );
             },
           );

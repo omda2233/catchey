@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "707075319029",
+    "project_id": "catchy-fabric-market",
+    "storage_bucket": "catchy-fabric-market.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:707075319029:android:bc5fe10b061ec9029211bc",
+        "android_client_info": {
+          "package_name": "com.catchy.fabricmarket"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2x_nOR9G460pAXLu5VGD8xPFbyEY-y_Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

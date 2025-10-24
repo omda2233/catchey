@@ -1,0 +1,29 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow users to upload their own profile images
+    match /users/{userId}/profile/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow sellers to upload product images
+    match /products/{productId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        (request.auth.token.role == 'seller' || request.auth.token.role == 'admin');
+    }
+    
+    // Allow order-related images
+    match /orders/{orderId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        (request.auth.token.role in ['buyer', 'seller', 'delivery', 'admin']);
+    }
+    
+    // Default deny all
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+} 

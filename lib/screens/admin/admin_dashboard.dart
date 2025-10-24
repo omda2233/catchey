@@ -6,6 +6,8 @@ import '../../models/user_model.dart';
 import '../../models/order_model.dart';
 import '../../widgets/custom_button.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class AdminDashboard extends StatefulWidget {
   @override
@@ -89,12 +91,12 @@ class _AdminDashboardState extends State<AdminDashboard>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
     final authProvider = Provider.of<AuthProvider>(context);
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
+    return Scaffold(
+      appBar: AppBar(
         title: Text('Admin Dashboard'),
         bottom: TabBar(
           controller: _tabController,

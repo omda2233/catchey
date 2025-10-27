@@ -27,6 +27,9 @@ export const recordPayment = async (req, res) => {
 
     const { method, amount, orderId, cardNumber, expiryDate, cvv, instapayNumber } = req.body;
 
+    // Temporary log for STEP 5
+    try { console.log('💰 Payment received:', req.body); } catch (_) {}
+
     if (!method || !amount || !orderId) {
       return res.status(400).json({ error: 'Missing required fields' });
     }

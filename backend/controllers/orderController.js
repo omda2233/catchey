@@ -10,40 +10,43 @@ export const placeOrder = async (req, res) => {
       return res.status(403).json({ error: 'Only buyers can place orders' });
     }
 
-    const { items, sellerId, deliveryId, totalAmount } = req.body;
-    if (!items || !sellerId || !totalAmount) {
+    const { items, merchantId, deliveryId, totalAmount } = req.body;
+    if (!items || !merchantId || !totalAmount) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Temporary log for STEP 5
+    try { console.log('🔥 New order:', req.body); } catch (_) {}
+
     const orderData = {
-      buyer_id: user.uid,
-      seller_id: sellerId,
-      delivery_id: deliveryId || null,
+      buyerId: user.uid,
+      sellerId: merchantId,
+      deliveryId: deliveryId || null,
       items,
       status: 'pending',
-      total_amount: totalAmount,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      updated_at: admin.firestore.FieldValue.serverTimestamp()
+      total: totalAmount,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
     };
 
     const orderRef = await db.collection('orders').add(orderData);
 
     // Notify seller
     await db.collection('notifications').add({
-      user_id: sellerId,
+      userId: merchantId,
       title: 'New Order Received',
       body: `You have received a new order for ${items.length} items`,
-      sent_at: admin.firestore.FieldValue.serverTimestamp(),
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
       read: false
     });
 
     // Notify delivery if assigned
     if (deliveryId) {
       await db.collection('notifications').add({
-        user_id: deliveryId,
+        userId: deliveryId,
         title: 'New Delivery Assignment',
         body: 'You have been assigned a new delivery order',
-        sent_at: admin.firestore.FieldValue.serverTimestamp(),
+        sentAt: admin.firestore.FieldValue.serverTimestamp(),
         read: false
       });
     }
@@ -68,6 +71,9 @@ export const updateDeliveryStatus = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Temporary log for STEP 5
+    try { console.log('📦 Order delivery status updated:', deliveryStatus); } catch (_) {}
+
     const orderRef = db.collection('orders').doc(orderId);
     const orderDoc = await orderRef.get();
     if (!orderDoc.exists) {
@@ -75,13 +81,13 @@ export const updateDeliveryStatus = async (req, res) => {
     }
 
     const orderData = orderDoc.data();
-    if (orderData.delivery_id !== user.uid) {
+    if (orderData.deliveryId !== user.uid) {
       return res.status(403).json({ error: 'Not authorized to update this order delivery status' });
     }
 
     await orderRef.update({
       deliveryStatus,
-      updated_at: admin.firestore.FieldValue.serverTimestamp()
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
     return res.status(200).json({ success: true });
@@ -95,14 +101,17 @@ export const updateDeliveryStatus = async (req, res) => {
 export const updateOrderStatus = async (req, res) => {
   try {
     const user = req.user;
-    if (user.role !== 'seller') {
-      return res.status(403).json({ error: 'Only sellers can update order status' });
+    if (user.role !== 'merchant' && user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only merchants can update order status' });
     }
 
     const { orderId, status } = req.body;
     if (!orderId || !status) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
+
+    // Temporary log for STEP 5
+    try { console.log('📦 Order status updated:', status); } catch (_) {}
 
     const orderRef = db.collection('orders').doc(orderId);
     const orderDoc = await orderRef.get();
@@ -111,13 +120,13 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     const orderData = orderDoc.data();
-    if (orderData.seller_id !== user.uid) {
+    if (user.role !== 'admin' && orderData.sellerId !== user.uid) {
       return res.status(403).json({ error: 'Not authorized to update this order status' });
     }
 
     await orderRef.update({
       status,
-      updated_at: admin.firestore.FieldValue.serverTimestamp()
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
     return res.status(200).json({ success: true });

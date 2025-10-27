@@ -15,6 +15,7 @@ const authMiddleware = async (req, res, next) => {
       uid: decodedToken.uid,
       role: decodedToken.role || 'buyer' // default role if not set
     };
+    console.log(`[${new Date().toISOString()}] ✅ Authenticated user uid=${req.user.uid} role=${req.user.role}`);
     next();
   } catch (error) {
     console.error('Error verifying token:', error);

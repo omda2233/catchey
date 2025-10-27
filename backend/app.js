@@ -7,6 +7,18 @@ const app = express();
 
 app.use(bodyParser.json());
 
+// Simple logging middleware for mutating requests
+app.use((req, res, next) => {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    try {
+      console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} body=`, req.body);
+    } catch (_) {
+      console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+    }
+  }
+  next();
+});
+
 // Mount routes
 app.use('/orders', orderRoutes);
 app.use('/payments', paymentRoutes);

@@ -6,6 +6,6 @@ import roleMiddleware from '../middlewares/roleMiddleware.js';
 const router = express.Router();
 
 // Record payment (buyer only)
-router.post('/record', authMiddleware, roleMiddleware('buyer'), paymentController.recordPayment);
+router.post('/', authMiddleware, roleMiddleware('buyer'), paymentController.recordPayment);
 
 export default router;

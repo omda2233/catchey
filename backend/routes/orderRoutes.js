@@ -6,12 +6,12 @@ import roleMiddleware from '../middlewares/roleMiddleware.js';
 const router = express.Router();
 
 // Place order (buyer only)
-router.post('/place', authMiddleware, roleMiddleware('buyer'), orderController.placeOrder);
+router.post('/', authMiddleware, roleMiddleware('buyer'), orderController.placeOrder);
 
 // Update delivery status (delivery only)
-router.put('/delivery-status', authMiddleware, roleMiddleware('delivery'), orderController.updateDeliveryStatus);
+router.put('/:id/delivery-status', authMiddleware, roleMiddleware('delivery'), orderController.updateDeliveryStatus);
 
-// Update order status (seller only)
-router.put('/status', authMiddleware, roleMiddleware('seller'), orderController.updateOrderStatus);
+// Update order status (merchant or admin)
+router.put('/:id/status', authMiddleware, roleMiddleware('merchant', 'admin'), orderController.updateOrderStatus);
 
 export default router;

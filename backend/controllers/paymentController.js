@@ -1,4 +1,5 @@
-import admin from 'firebase-admin';
+import admin from '../firebaseAdmin.js';
+import logger from '../utils/logger.js';
 
 const db = admin.firestore();
 
@@ -35,12 +36,12 @@ export const recordPayment = async (req, res) => {
     }
 
     let paymentData = {
-      buyerId: user.uid,
       orderId,
       amount,
-      isVerified: false,
       method,
-      paidAt: admin.firestore.FieldValue.serverTimestamp(),
+      status: 'pending',
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      buyerId: user.uid,
       transactionId: ''
     };
 
@@ -49,7 +50,7 @@ export const recordPayment = async (req, res) => {
         return res.status(400).json({ error: 'Invalid Instapay number' });
       }
       paymentData.transactionId = `instapay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      paymentData.isVerified = true;
+      paymentData.status = 'success';
     } else if (method === 'card') {
       if (!cardNumber || !expiryDate || !cvv) {
         return res.status(400).json({ error: 'Missing card details' });
@@ -68,7 +69,7 @@ export const recordPayment = async (req, res) => {
       }
 
       paymentData.transactionId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      paymentData.isVerified = true;
+      paymentData.status = 'success';
       paymentData.cardType = cardType;
     } else {
       return res.status(400).json({ error: 'Unsupported payment method' });
@@ -76,14 +77,26 @@ export const recordPayment = async (req, res) => {
 
     const paymentRef = await db.collection('payments').add(paymentData);
 
+    // Update order payment status
+    try {
+      await db.collection('orders').doc(orderId).set({
+        paymentStatus: 'paid',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (e) {
+      console.error('Failed to update order paymentStatus', e);
+    }
+
     // Send notification
     await db.collection('notifications').add({
-      user_id: user.uid,
+      userId: user.uid,
       title: 'Payment Recorded',
       body: `Your payment of $${amount} via ${method} has been recorded.`,
-      sent_at: admin.firestore.FieldValue.serverTimestamp(),
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
       read: false
     });
+
+    try { await logger.info('Payment Received', { paymentId: paymentRef.id, orderId, amount, method }, user.uid); } catch (_) {}
 
     return res.status(201).json({ success: true, paymentId: paymentRef.id });
   } catch (error) {

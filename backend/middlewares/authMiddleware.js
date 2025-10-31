@@ -1,4 +1,4 @@
-import admin from 'firebase-admin';
+import admin from '../firebaseAdmin.js';
 
 // Middleware to verify Firebase ID token and attach user info
 const authMiddleware = async (req, res, next) => {

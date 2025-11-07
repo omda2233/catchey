@@ -176,3 +176,44 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Flutter team for the amazing framework
 - Firebase for the backend services
 - All contributors who have helped shape this project
+
+## Backend Deployment (Railway)
+
+The backend is ready for Railway deployment with the following configuration:
+
+### Railway Settings
+- **Root Directory**: `backend`
+- **Build Command**: `npm install`
+- **Start Command**: `npm start`
+
+### Environment Variables Required
+```env
+PORT=3000
+FIREBASE_PROJECT_ID=catchy-fabric-market
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@catchy-fabric-market.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+FIREBASE_STORAGE_BUCKET=catchy-fabric-market.appspot.com
+```
+
+### Health Check
+After deployment, verify the backend is running:
+```
+GET https://<railway-url>/health
+```
+
+Expected response:
+```json
+{
+  "status": "healthy",
+  "service": "Catchy Fabric Market Backend",
+  "time": "2025-11-04T..."
+}
+```
+
+### API Endpoints
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User authentication  
+- `POST /api/orders` - Place orders (buyer role)
+- `PUT /api/orders/:id/status` - Update order status (merchant/admin)
+- `PUT /api/orders/:id/delivery-status` - Update delivery status (delivery role)
+- `POST /api/payments` - Record payments (buyer role)

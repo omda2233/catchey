@@ -3,8 +3,6 @@ dotenv.config();
 import app from './app.js';
 import admin from './firebaseAdmin.js';
 
-const PORT = process.env.PORT || 3000;
-
 async function verifyFirestore() {
   try {
     const db = admin.firestore();
@@ -17,8 +15,23 @@ async function verifyFirestore() {
   }
 }
 
-verifyFirestore().finally(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-});
+verifyFirestore();
+
+// --- health + listen snippet (exact) --- 
+app.get('/health', (req, res) => { 
+  res.status(200).json({ 
+    status: 'healthy', 
+    service: 'Catchy Fabric Market Backend', 
+    time: new Date().toISOString() 
+  }); 
+}); 
+
+app.get('/', (req, res) => { 
+  res.send('Backend is live 🚀'); 
+}); 
+
+const PORT = process.env.PORT || 3000; 
+app.listen(PORT, '0.0.0.0', () => { 
+  console.log(`🚀 Server listening on port ${PORT}`); 
+}); 
+// --- end snippet ---

@@ -1,30 +1,37 @@
 import admin from 'firebase-admin';
-import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const alreadyInitialized = admin.apps.length > 0;
-if (!alreadyInitialized) {
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+let serviceAccount = null;
+const primaryPath = path.join(__dirname, 'serviceAccountKey.json');
+const fallbackPath = path.join(__dirname, 'catchy-fabric-market-firebase-adminsdk-fbsvc-684c43ae4f.json');
 
-  const hasServiceAccount = projectId && clientEmail && privateKey;
-  const isPlaceholder = projectId === 'your-project-id';
+try {
+  const jsonStr = fs.readFileSync(primaryPath, 'utf8');
+  serviceAccount = JSON.parse(jsonStr);
+} catch (_) {
+  try {
+    const jsonStr = fs.readFileSync(fallbackPath, 'utf8');
+    serviceAccount = JSON.parse(jsonStr);
+  } catch (__) {
+    console.warn('Service account JSON not found. Falling back to default initialization.');
+  }
+}
 
-  if (hasServiceAccount && !isPlaceholder) {
+if (!admin.apps.length) {
+  if (serviceAccount) {
     admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: projectId,
-        clientEmail: clientEmail,
-        privateKey: privateKey.replace(/\\n/g, '\n'),
-      }),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || undefined,
+      credential: admin.credential.cert(serviceAccount),
     });
   } else {
-    console.log('Firebase Admin SDK initialized without explicit credentials. This is expected for placeholder credentials or in a GCP environment.');
     admin.initializeApp();
   }
 }
 
+const db = admin.firestore();
+export { db };
 export default admin;

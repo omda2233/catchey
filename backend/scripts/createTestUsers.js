@@ -1,69 +1,41 @@
 import admin from '../firebaseAdmin.js';
 
-const createTestUsers = async () => {
+const createFirestoreTestUsers = async () => {
   const users = [
-    {
-      email: 'admin@test.com',
-      password: 'password123',
-      role: 'admin',
-    },
-    {
-      email: 'buyer@test.com',
-      password: 'password123',
-      role: 'buyer',
-    },
-    {
-      email: 'seller@test.com',
-      password: 'password123',
-      role: 'seller',
-    },
-    {
-      email: 'shipping@test.com',
-      password: 'password123',
-      role: 'shipping',
-    },
+    { role: 'admin', email: 'admin@test.com', password: '123456', notes: 'System administrator' },
+    { role: 'merchant', email: 'merchant@test.com', password: '123456', notes: 'Seller test account' },
+    { role: 'delivery', email: 'delivery@test.com', password: '123456', notes: 'Delivery company test' },
+    { role: 'buyer', email: 'buyer@test.com', password: '123456', notes: 'Default customer' },
   ];
 
-  for (const userData of users) {
+  const db = admin.firestore();
+  const col = db.collection('users');
+
+  for (const user of users) {
     try {
-      let userRecord;
-      try {
-        userRecord = await admin.auth().getUserByEmail(userData.email);
-        console.log(`User ${userData.email} already exists.`);
-      } catch (error) {
-        if (error.code === 'auth/user-not-found') {
-          userRecord = await admin.auth().createUser({
-            email: userData.email,
-            password: userData.password,
-          });
-          console.log(`Successfully created new user: ${userData.email}`);
-        } else {
-          throw error;
-        }
-      }
-
-      await admin.auth().setCustomUserClaims(userRecord.uid, { role: userData.role });
-
-      const userDoc = {
-        uid: userRecord.uid,
-        email: userData.email,
-        role: userData.role,
+      const docRef = col.doc(user.email);
+      const payload = {
+        email: user.email,
+        role: user.role,
+        password: user.password,
+        notes: user.notes,
         status: 'active',
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       };
-      await admin.firestore().collection('users').doc(userRecord.uid).set(userDoc, { merge: true });
-
-      console.log(`Set custom claim and Firestore role for ${userData.email} to ${userData.role}`);
-    } catch (error) {
-      console.error(`Error creating user ${userData.email}:`, error);
+      await docRef.set(payload, { merge: true });
+      console.log(`✅ Created/updated Firestore doc for ${user.email} with role ${user.role}`);
+    } catch (err) {
+      console.error(`❌ Failed to create Firestore doc for ${user.email}`, err);
     }
   }
 };
 
-createTestUsers().then(() => {
-  console.log('Test user creation process finished.');
-  process.exit(0);
-}).catch((error) => {
+createFirestoreTestUsers()
+  .then(() => {
+    console.log('🎉 Firestore test user creation completed.');
+    process.exit(0);
+  })
+  .catch((error) => {
     console.error('Error:', error);
     process.exit(1);
-});
+  });

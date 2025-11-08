@@ -32,7 +32,7 @@ app.use('/api/auth', authRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', service: 'Catchy Fabric Market Backend', time: new Date().toISOString() });
+  res.status(200).json({ status: 'healthy', service: 'Catchy Fabric Market Backend' });
 });
 
 // 404 handler

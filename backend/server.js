@@ -21,8 +21,9 @@ app.get('/', (req, res) => {
   res.send('Backend is live 🚀');
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
+const BASE_URL = "https://catchey-copy-copy-production.up.railway.app";
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
+  console.log(`✅ Server running on ${BASE_URL} (port ${PORT})`);
 });
 // --- end snippet ---

@@ -145,8 +145,37 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
+// List orders (role-based)
+export const listOrders = async (req, res) => {
+  try {
+    const user = req.user;
+
+    let query = db.collection('orders');
+    if (user.role === 'buyer') {
+      query = query.where('buyerId', '==', user.uid);
+    } else if (user.role === 'merchant') {
+      query = query.where('merchantId', '==', user.uid);
+    } else if (user.role === 'delivery') {
+      query = query.where('deliveryId', '==', user.uid);
+    } else if (user.role === 'admin') {
+      // Admin can see all orders; optionally limit for performance
+      query = query.orderBy('createdAt', 'desc').limit(50);
+    } else {
+      return res.status(403).json({ error: 'Forbidden: Insufficient role' });
+    }
+
+    const snapshot = await query.get();
+    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return res.status(200).json({ success: true, orders });
+  } catch (error) {
+    console.error('Error listing orders:', error);
+    return res.status(500).json({ error: 'Error listing orders' });
+  }
+};
+
 export default {
   placeOrder,
   updateDeliveryStatus,
-  updateOrderStatus
+  updateOrderStatus,
+  listOrders
 };

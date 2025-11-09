@@ -30,7 +30,11 @@ app.use((req, res, next) => {
   next();
 });
 
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './docs/swagger.js';
+
 // Mount routes
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/auth', authRoutes);

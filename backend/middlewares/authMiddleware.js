@@ -11,9 +11,13 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
+    // Normalize role names to match route middleware expectations
+    const rawRole = decodedToken.role || 'buyer';
+    const roleMap = { seller: 'merchant', shipping: 'delivery' };
+    const normalizedRole = roleMap[rawRole] || rawRole;
     req.user = {
       uid: decodedToken.uid,
-      role: decodedToken.role || 'buyer' // default role if not set
+      role: normalizedRole
     };
     console.log(`[${new Date().toISOString()}] ✅ Authenticated user uid=${req.user.uid} role=${req.user.role}`);
     next();

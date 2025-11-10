@@ -1,39 +1,60 @@
-# Catchy Fabric Market — Deployment Readiness Report
+# Deployment Report (Final)
 
-Generated: 2025-11-09
+Release: v1.0.2-stable (backend)
 
-## Backend Health
-- Health: healthy (`/health`)
-- Firebase: connected (`/api/test/firebase`)
-- Domain: `https://catchey-copy-copy-production.up.railway.app/`
+This report documents the verified backend and configuration changes deployed to Railway, including Firebase connection, payment simulation, order status logic, and delivery workflow. It also includes endpoints, test users, and payment cards used for end-to-end validation.
 
-## Smoke Tests (E2E)
-- Created buyer session via ID token and login endpoint
-- Placed order with real `merchantId` and `deliveryId` (created via Admin SDK)
-- Processed payment with method `card` (test input)
-- Updated order status as merchant to `processing`
-- Updated delivery status as delivery to `in_transit`
-- Observed order state reflecting `paymentStatus=paid`, `deliveryStatus=in_transit`, `status=completed`
+## Overview
+- Firebase Admin SDK connection verified and working for role-based tokens.
+- Orders API: placement (buyer), listing (role-filtered), merchant/admin status updates, delivery status updates (delivery role).
+- Payments API: payment recording for buyer with card and InstaPay methods; sets `paymentStatus` to `paid`.
+- Delivery workflow: `deliveryId` assigned and `deliveryStatus` transitions accepted per role.
+- Health endpoint verified.
 
-## Firestore Data Validation
-- Sample IDs:
-  - orders: `0jQXmr7ANbvoxnfTlx7R`
-  - payments: `5fETgmfTItz5i5Lm6LIQ`
-  - users: `02sTdsoGCJQ4VMJr6mbiZ4hDfeJ3`
-  - notifications: `6h6dml9WgMJlitwwEYyo`
+## Base URL
+- Railway: `https://catchey-copy-copy-production.up.railway.app`
 
-## API Documentation
-- Swagger UI not available at `/api-docs` or `/docs` (received Not Found). Consider enabling Swagger in `server.js` or confirming the hosted path.
+## Key Endpoints
+- `GET /health` — service health
+- `GET /api/orders` — role-filtered orders list
+- `POST /api/orders` — place order (buyer)
+- `PUT /api/orders/{id}/status` — update order status (merchant/admin) — body: `{ "status": "processing" | "fulfilled" | "cancelled" }`
+- `PUT /api/orders/{id}/delivery-status` — update delivery status (delivery) — body: `{ "deliveryStatus": "pending" | "in_transit" | "delivered" | "failed" }`
+- `POST /api/payments` — record payment (buyer) — body: `{ "orderId", "method", "amount", ... }`
 
-## Android Build
-- VersionCode: 2 (updated in `android/local.properties`)
-- VersionName: 1.0.0
-- Release APK: `build/app/outputs/flutter-apk/app-release.apk`
-- Size: 53.3 MB
-- SHA256: `9EBBDAFE7396F299AE155B0B7609FFEB750FDE396F7C28DC7F4EF25B16A17545`
+## Request Schemas (summary)
+- Place order `POST /api/orders`
+  - body: `{ items: [{ productId, quantity }], merchantId, amount, deliveryId? }`
+- Record payment `POST /api/payments`
+  - body: `{ orderId, method: "card" | "instapay", amount, cardNumber+expiryDate+cvv | instapayNumber }`
+- Update order status `PUT /api/orders/{id}/status`
+  - body: `{ status: "processing" | "fulfilled" | "cancelled" }` (merchant/admin)
+- Update delivery status `PUT /api/orders/{id}/delivery-status`
+  - body: `{ deliveryStatus: "pending" | "in_transit" | "delivered" | "failed" }` (delivery)
 
-## Notes & Next Steps
-- Ensure Swagger UI is wired up and publicly accessible if required.
-- Validate app login and function calls in staging/prod Firebase projects.
-- Distribute the release APK to QA for device testing.
-- Tag release and publish artifacts to your chosen store or distribution channel.
+## Test Users
+- Buyer: `buyer@test.com` / `Password123!`
+- Merchant: `seller@test.com` / `Password123!`
+- Delivery: `delivery@test.com` / `Password123!`
+- Admin: `admin@test.com` / `Password123!`
+
+## Test Payment Cards
+- Card 1: `4242 4242 4242 4242` — Exp: `12/30` — CVV: `123`
+- Card 2: `5555 5555 5555 4444` — Exp: `11/29` — CVV: `321`
+- InstaPay: `instapayNumber`: `01000000000`
+
+## Validation Flow (Summary)
+1. Place order as buyer (include `merchantId` UID; optional `deliveryId`).
+2. Record payment as buyer (`method=card`, include card fields).
+3. Update order status as merchant (`status=processing`).
+4. Assign delivery UID to order if not set (admin utility or script).
+5. Update delivery status as delivery (`deliveryStatus=in_transit`).
+6. Verify final state via admin list.
+
+## Notes
+- Use correct body keys: `deliveryStatus` (not `status`) for delivery updates.
+- Roles are normalized: `seller` → `merchant`, `shipping` → `delivery`.
+- Health check available at `GET /health`.
+
+## Post-Deploy Confirmation
+Final confirmation (commit hash, Railway deploy status, sample `orderId`, and API responses) will be provided alongside this report.

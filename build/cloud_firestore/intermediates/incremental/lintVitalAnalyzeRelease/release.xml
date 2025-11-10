@@ -6,7 +6,7 @@
     mergedManifest="C:\Users\mohamedemad\catchy-fabric-market\build\cloud_firestore\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml"
     proguardFiles="C:\Users\mohamedemad\catchy-fabric-market\build\cloud_firestore\intermediates\default_proguard_files\global\proguard-android.txt-8.7.0"
     partialResultsDir="C:\Users\mohamedemad\catchy-fabric-market\build\cloud_firestore\intermediates\lint_vital_partial_results\release\lintVitalAnalyzeRelease\out"
-    desugaredMethodsFiles="C:\Users\mohamedemad\.gradle\caches\8.9\transforms\532747b805877323be71630e7c2dc7c5\transformed\D8BackportedDesugaredMethods.txt">
+    desugaredMethodsFiles="C:\Users\mohamedemad\.gradle\caches\8.9\transforms\344cd851d36e1b15c7d912bce676d8c3\transformed\D8BackportedDesugaredMethods.txt">
   <buildFeatures
       namespacing="REQUIRED"/>
   <sourceProviders>
@@ -26,6 +26,6 @@
       applicationId="io.flutter.plugins.firebase.firestore"
       generatedSourceFolders="C:\Users\mohamedemad\catchy-fabric-market\build\cloud_firestore\generated\ap_generated_sources\release\out;C:\Users\mohamedemad\catchy-fabric-market\build\cloud_firestore\generated\source\buildConfig\release"
       generatedResourceFolders="C:\Users\mohamedemad\catchy-fabric-market\build\cloud_firestore\generated\res\resValues\release"
-      desugaredMethodsFiles="C:\Users\mohamedemad\.gradle\caches\8.9\transforms\532747b805877323be71630e7c2dc7c5\transformed\D8BackportedDesugaredMethods.txt">
+      desugaredMethodsFiles="C:\Users\mohamedemad\.gradle\caches\8.9\transforms\344cd851d36e1b15c7d912bce676d8c3\transformed\D8BackportedDesugaredMethods.txt">
   </artifact>
 </variant>

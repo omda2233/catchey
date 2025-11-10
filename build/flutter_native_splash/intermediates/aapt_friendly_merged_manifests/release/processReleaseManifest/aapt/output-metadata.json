@@ -5,7 +5,7 @@
     "kind": "Directory"
   },
   "applicationId": "net.jonhanson.flutter_native_splash",
-  "variantName": "debug",
+  "variantName": "release",
   "elements": [
     {
       "type": "SINGLE",

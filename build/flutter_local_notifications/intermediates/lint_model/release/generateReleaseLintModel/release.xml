@@ -27,6 +27,6 @@
       applicationId="com.dexterous.flutterlocalnotifications"
       generatedSourceFolders="C:\Users\mohamedemad\catchy-fabric-market\build\flutter_local_notifications\generated\ap_generated_sources\release\out"
       generatedResourceFolders="C:\Users\mohamedemad\catchy-fabric-market\build\flutter_local_notifications\generated\res\resValues\release"
-      desugaredMethodsFiles="C:\Users\mohamedemad\.gradle\caches\8.9\transforms\c12aadfd7f819d1b5c41b615030e33d5\transformed\desugar_jdk_libs_configuration-2.1.4-desugar-lint.txt;C:\Users\mohamedemad\.gradle\caches\8.9\transforms\233fa6040084268993210c6a86be016e\transformed\D8BackportedDesugaredMethods.txt">
+      desugaredMethodsFiles="C:\Users\mohamedemad\.gradle\caches\8.9\transforms\cfe38856bbcfa63c462e5169ab16cde0\transformed\desugar_jdk_libs_configuration-2.1.4-desugar-lint.txt;C:\Users\mohamedemad\.gradle\caches\8.9\transforms\3fc7c39f9aec5e537cfb737713b7125c\transformed\D8BackportedDesugaredMethods.txt">
   </artifact>
 </variant>

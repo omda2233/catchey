@@ -7,7 +7,7 @@
     mergedManifest="C:\Users\mohamedemad\catchy-fabric-market\build\app\intermediates\merged_manifest\release\processReleaseMainManifest\AndroidManifest.xml"
     proguardFiles="C:\Users\mohamedemad\catchy-fabric-market\build\app\intermediates\default_proguard_files\global\proguard-android-optimize.txt-8.7.0;C:\Users\mohamedemad\OneDrive\Desktop\flutter_windows_3.29.3-stable\flutter\packages\flutter_tools\gradle\flutter_proguard_rules.pro;proguard-rules.pro;C:\Users\mohamedemad\catchy-fabric-market\build\app\intermediates\default_proguard_files\global\proguard-android.txt-8.7.0;proguard-rules.pro"
     partialResultsDir="C:\Users\mohamedemad\catchy-fabric-market\build\app\intermediates\lint_vital_partial_results\release\lintVitalAnalyzeRelease\out"
-    desugaredMethodsFiles="C:\Users\mohamedemad\.gradle\caches\8.9\transforms\2ab12c0dccb23c2dd31ca93448d1ac52\transformed\desugar_jdk_libs_configuration-2.1.4-desugar-lint.txt;C:\Users\mohamedemad\.gradle\caches\8.9\transforms\67cfcefae2940564bb4176b4e34fa27a\transformed\D8BackportedDesugaredMethods.txt">
+    desugaredMethodsFiles="C:\Users\mohamedemad\.gradle\caches\8.9\transforms\e7953cf3650e03a67ed3a676d1b924ab\transformed\desugar_jdk_libs_configuration-2.1.4-desugar-lint.txt;C:\Users\mohamedemad\.gradle\caches\8.9\transforms\74c4a7841dd28649342ee684c48b1bca\transformed\D8BackportedDesugaredMethods.txt">
   <buildFeatures
       coreLibraryDesugaring="true"
       namespacing="REQUIRED"/>
@@ -33,6 +33,6 @@
       applicationId="com.catchy.fabricmarket"
       generatedSourceFolders="C:\Users\mohamedemad\catchy-fabric-market\build\app\generated\ap_generated_sources\release\out"
       generatedResourceFolders="C:\Users\mohamedemad\catchy-fabric-market\build\app\generated\res\processReleaseGoogleServices;C:\Users\mohamedemad\catchy-fabric-market\build\app\generated\crashlytics\res\release;C:\Users\mohamedemad\catchy-fabric-market\build\app\generated\res\resValues\release"
-      desugaredMethodsFiles="C:\Users\mohamedemad\.gradle\caches\8.9\transforms\2ab12c0dccb23c2dd31ca93448d1ac52\transformed\desugar_jdk_libs_configuration-2.1.4-desugar-lint.txt;C:\Users\mohamedemad\.gradle\caches\8.9\transforms\67cfcefae2940564bb4176b4e34fa27a\transformed\D8BackportedDesugaredMethods.txt">
+      desugaredMethodsFiles="C:\Users\mohamedemad\.gradle\caches\8.9\transforms\e7953cf3650e03a67ed3a676d1b924ab\transformed\desugar_jdk_libs_configuration-2.1.4-desugar-lint.txt;C:\Users\mohamedemad\.gradle\caches\8.9\transforms\74c4a7841dd28649342ee684c48b1bca\transformed\D8BackportedDesugaredMethods.txt">
   </artifact>
 </variant>

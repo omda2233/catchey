@@ -1,7 +1,7 @@
 [
     {
         "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-26:/layout/browser_actions_context_menu_row.xml",
-        "source": "io.flutter.plugins.urllauncher.url_launcher_android-browser-1.8.0-3:/layout/browser_actions_context_menu_row.xml"
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-browser-1.8.0-2:/layout/browser_actions_context_menu_row.xml"
     },
     {
         "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-26:/layout/notification_template_part_chronometer.xml",
@@ -21,7 +21,7 @@
     },
     {
         "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-26:/layout/browser_actions_context_menu_page.xml",
-        "source": "io.flutter.plugins.urllauncher.url_launcher_android-browser-1.8.0-3:/layout/browser_actions_context_menu_page.xml"
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-browser-1.8.0-2:/layout/browser_actions_context_menu_page.xml"
     },
     {
         "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-26:/layout/notification_template_part_time.xml",

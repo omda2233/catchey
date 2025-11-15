@@ -84,10 +84,18 @@ android {
             // Use release signing if configured
             if (keystoreProperties.containsKey('keyAlias')) {
                 signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
             }
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    bundle {
+        abi.enableSplit = false
+        density.enableSplit = false
+        language.enableSplit = false
     }
 }
 

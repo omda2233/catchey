@@ -25,7 +25,7 @@ router.post('/register', register);
  *                 format: password
  *               role:
  *                 type: string
- *                 enum: [buyer, seller, delivery, admin]
+ *                 enum: [buyer, merchant, delivery, admin]
  *             required: [email, password, role]
  *     responses:
  *       200:

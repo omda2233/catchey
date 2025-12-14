@@ -3,7 +3,7 @@ import logger from '../utils/logger.js';
 
 const db = admin.firestore();
 
-const ALLOWED_ROLES = ['buyer', 'seller', 'shipping', 'admin'];
+const ALLOWED_ROLES = ['buyer', 'merchant', 'delivery', 'admin'];
 
 export const register = async (req, res) => {
   try {
